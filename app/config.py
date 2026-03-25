@@ -1,5 +1,9 @@
 import os
 import secrets 
+from dotenv import load_dotenv
+
+load_dotenv()
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
 class DevConfig:
     JWT_TOKEN_LOCATION = ["cookies"]
@@ -20,3 +24,18 @@ class DevConfig:
     JWT_REFRESH_TOKEN_EXPIRES = 7 * 24 * 3600
 
     CORS_ORIGINS = ["http://localhost:4200"]
+
+    # ── Base de données ───────────────────────────────────
+    SQLALCHEMY_DATABASE_URI           = 'sqlite:///' + os.path.join(BASE_DIR, 'reparations_dev.db')
+    SQLALCHEMY_TRACK_MODIFICATIONS    = False
+
+    # ── Upload ────────────────────────────────────────────
+    MAX_CONTENT_LENGTH  = 10 * 1024 * 1024   # 10 Mo
+    JSON_ENSURE_ASCII   = False
+
+class ProdConfig(DevConfig):
+    JWT_COOKIE_SECURE           = True
+    JWT_SECRET_KEY              = os.getenv('JWT_SECRET_KEY')
+    SQLALCHEMY_DATABASE_URI     = os.getenv('DATABASE_URL',
+        'sqlite:///' + os.path.join(BASE_DIR, 'reparations.db'))
+    CORS_ORIGINS                = os.getenv('CORS_ORIGINS', 'http://localhost:4200').split(',')

@@ -1,41 +1,46 @@
-from flask import Flask, jsonify, make_response
+from flask import Flask, jsonify
 from flask_cors import CORS
+from flask_jwt_extended.exceptions import JWTExtendedException
 
 from .config import DevConfig
-from .extensions import jwt, limiter
-from flask_jwt_extended.exceptions import JWTExtendedException
+from .extensions import jwt, limiter, db, migrate, ma
 from .http.errors import api_error
 
 def create_app():
     app = Flask(__name__)
-    
-    @app.errorhandler(JWTExtendedException)
-    def handle_jwt_error(e):
-        # Ex: missing CSRF header, token expired, etc.
-        return api_error("Non authentifié", 401, code="AUTH_REQUIRED")
-    
-    @app.errorhandler(429)
-    def ratelimit_handler(e):
-        resp = jsonify({
-            "message": "Trop de tentatives, réessaie plus tard",
-            "code": "RATE_LIMITED",
-        })
-        resp.status_code = 429
-        resp.headers["Retry-After"] = "60"
-        return resp
-    
     app.config.from_object(DevConfig)
 
-    # Cookies cross-origin => origin explicite + credentials (pas '*') [web:86]
-    CORS(app, origins=app.config["CORS_ORIGINS"], supports_credentials=True)
+    # ── Gestion des erreurs ───────────────────────────────
+    @app.errorhandler(JWTExtendedException)
+    def handle_jwt_error(e):
+        return api_error('Non authentifié', 401, code='AUTH_REQUIRED')
 
+    @app.errorhandler(429)
+    def ratelimit_handler(e):
+        resp = jsonify({"message": "Trop de tentatives", "code": "RATE_LIMITED"})
+        resp.status_code = 429
+        resp.headers['Retry-After'] = '60'
+        return resp
+
+    # ── Extensions ────────────────────────────────────────
+    CORS(app, origins=app.config['CORS_ORIGINS'], supports_credentials=True)
     jwt.init_app(app)
     limiter.init_app(app)
+    db.init_app(app)
+    migrate.init_app(app, db)
+    ma.init_app(app)
 
-    from .auth.controller import auth_bp
-    app.register_blueprint(auth_bp, url_prefix="/api/auth")
+    # ── Blueprints ────────────────────────────────────────
+    from .auth.controller        import auth_bp
+    from .user.controller        import user_bp
+    from .reparations.controller import reparations_bp
+    from .stats.controller       import stats_bp
+    from .ocr.controller         import ocr_bp
 
-    from .user.controller import user_bp
-    app.register_blueprint(user_bp, url_prefix="/api")
+    app.register_blueprint(auth_bp,        url_prefix='/api/auth')
+    app.register_blueprint(user_bp,        url_prefix='/api')
+    app.register_blueprint(reparations_bp, url_prefix='/api')
+    app.register_blueprint(stats_bp,       url_prefix='/api')
+    app.register_blueprint(ocr_bp,         url_prefix='/api')
 
     return app
