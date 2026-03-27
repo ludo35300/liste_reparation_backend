@@ -36,6 +36,8 @@ class DevConfig:
 class ProdConfig(DevConfig):
     JWT_COOKIE_SECURE           = True
     JWT_SECRET_KEY              = os.getenv('JWT_SECRET_KEY')
-    SQLALCHEMY_DATABASE_URI     = os.getenv('DATABASE_URL',
-        'sqlite:///' + os.path.join(BASE_DIR, 'reparations.db'))
+    SQLALCHEMY_DATABASE_URI = os.getenv(
+        'DATABASE_URL',
+        'postgresql://user:password@localhost/reparations_db'
+    )
     CORS_ORIGINS                = os.getenv('CORS_ORIGINS', 'http://localhost:4200').split(',')

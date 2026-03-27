@@ -1,17 +1,22 @@
 import time, secrets, hashlib
-from ..repositories.memory import reset_db
+from datetime import datetime, timedelta
 
-def create_reset_token(email: str, ttl_seconds: int = 30 * 60) -> str:
-    raw = secrets.token_urlsafe(32)
-    th = hashlib.sha256(raw.encode("utf-8")).hexdigest()
-    reset_db[th] = {"email": email, "exp": int(time.time()) + ttl_seconds, "used": False}
-    return raw
 
-def consume_reset_token(raw: str) -> str | None:
-    th = hashlib.sha256(raw.encode("utf-8")).hexdigest()
-    row = reset_db.get(th)
-    now = int(time.time())
-    if not row or row["used"] or row["exp"] <= now:
-        return None
-    row["used"] = True
-    return row["email"]
+def generate_raw_token() -> str:
+    """Génère un token brut aléatoire."""
+    return secrets.token_urlsafe(32)
+
+
+def hash_token(raw: str) -> str:
+    """Hash le token avant stockage en BDD."""
+    return hashlib.sha256(raw.encode('utf-8')).hexdigest()
+
+
+def token_expiry(ttl_seconds: int = 30 * 60) -> datetime:
+    """Retourne la date d'expiration."""
+    return datetime.utcnow() + timedelta(seconds=ttl_seconds)
+
+
+def is_token_valid(expires: datetime) -> bool:
+    """Vérifie que le token n'est pas expiré."""
+    return datetime.utcnow() < expires
