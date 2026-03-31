@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 load_dotenv()
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
+MISTRAL_API_KEY="tGR6zP6PLvlfG56xVgWMYQnJ57eelzDTM"
+
 class DevConfig:
     JWT_TOKEN_LOCATION = ["cookies"]
     JWT_COOKIE_CSRF_PROTECT = True
@@ -30,7 +32,7 @@ class DevConfig:
     SQLALCHEMY_TRACK_MODIFICATIONS    = False
 
     # ── Upload ────────────────────────────────────────────
-    MAX_CONTENT_LENGTH  = 10 * 1024 * 1024   # 10 Mo
+    MAX_CONTENT_LENGTH  = 32 * 1024 * 1024   # 32 Mo
     JSON_ENSURE_ASCII   = False
 
 class ProdConfig(DevConfig):

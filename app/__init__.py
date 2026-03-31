@@ -5,6 +5,8 @@ from flask_jwt_extended.exceptions import JWTExtendedException
 from .config import DevConfig
 from .extensions import jwt, limiter, db, migrate, ma
 from .http.errors import api_error
+from dotenv import load_dotenv
+load_dotenv()
 
 def create_app():
     app = Flask(__name__)
