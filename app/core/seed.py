@@ -1,4 +1,4 @@
-# app/ocr/seed.py
+# app/core/seed.py
 from app.extensions import db
 from app.models.reference import MachineTypeRef, PieceRef
 

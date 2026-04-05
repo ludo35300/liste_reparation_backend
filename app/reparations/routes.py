@@ -65,10 +65,3 @@ def suggest_piece_ref():
     query = request.args.get('q', '').strip()
     matches = svc.suggest_piece_refs(query)
     return jsonify(matches), 200
-
-# ── GET /machines ─────────────────────────────────────────────
-@reparations_bp.route('/machines', methods=['GET'])
-@jwt_required()
-def get_machines():
-    machines = svc.get_machines()
-    return jsonify(machines), 200

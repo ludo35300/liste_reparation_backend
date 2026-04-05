@@ -6,7 +6,11 @@ from flask_migrate import Migrate
 from flask_marshmallow import Marshmallow
 
 jwt     = JWTManager()
-limiter = Limiter(key_func=get_remote_address, default_limits=[])
+limiter = Limiter(
+    key_func=get_remote_address,
+    default_limits=[],
+    storage_uri="memory://"   # dev → mémoire | prod → "redis://..."
+)
 db      = SQLAlchemy()
 migrate = Migrate()
 ma      = Marshmallow()

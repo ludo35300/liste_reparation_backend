@@ -1,21 +1,36 @@
-from sqlalchemy import func
-
-from app.extensions import db
-from app.models.reference import MachineTypeRef, PieceRef
-from app.models.reparation import Reparation
-from app.models.piece_changee import PieceChangee
-from difflib import get_close_matches
+# app/reparations/service.py
 from datetime import datetime
 
+from app.extensions           import db
+from app.models.reparation    import Reparation
+from app.models.piece_changee import PieceChangee
+from app.utils.fuzzy          import fuzzy_machine, fuzzy_piece
 
+
+# ── Helpers internes ──────────────────────────────────────────
+def _load_labels_machines() -> list:
+    from app.models.reference import MachineTypeRef
+    return [m.label for m in MachineTypeRef.query.all()]
+
+def _load_pieces_connues() -> dict:
+    from app.models.reference import PieceRef
+    return {p.ref_piece.upper(): p.designation for p in PieceRef.query.all()}
+
+
+# ── CRUD ──────────────────────────────────────────────────────
 def creer_reparation(data: dict) -> Reparation:
     date_rep = data['date_reparation']
     if isinstance(date_rep, str):
         date_rep = datetime.strptime(date_rep, '%d/%m/%Y').date()
 
+    labels         = _load_labels_machines()
+    pieces_connues = _load_pieces_connues()
+
+    machine_corrigee, _ = fuzzy_machine(data.get('machine_type', ''), labels)
+
     rep = Reparation(
         numero_serie    = data['numero_serie'].strip().upper(),
-        machine_type    = correct_machine_type(data.get('machine_type', '')),
+        machine_type    = machine_corrigee,
         technicien      = data.get('technicien', ''),
         date_reparation = date_rep,
         notes           = data.get('notes', '')
@@ -24,10 +39,12 @@ def creer_reparation(data: dict) -> Reparation:
     db.session.flush()
 
     for p in data.get('pieces', []):
+        ref_brute = p.get('ref_piece', '')
+        ref_corrigee, designation, _ = fuzzy_piece(ref_brute, pieces_connues, cutoff=0.80)
         db.session.add(PieceChangee(
             reparation_id = rep.id,
-            ref_piece     = correct_piece_ref(p['ref_piece']),
-            designation   = p.get('designation', ''),
+            ref_piece     = ref_corrigee,
+            designation   = designation or p.get('designation', ''),
             quantite      = int(p.get('quantite', 1))
         ))
 
@@ -54,53 +71,14 @@ def supprimer(rep_id: int) -> None:
     db.session.commit()
 
 
-def correct_machine_type(raw: str) -> str:
-    """Retourne la meilleure correspondance fuzzy ou la valeur brute."""
-    if not raw:
-        return raw
-    labels = [r.label for r in MachineTypeRef.query.all()]
-    if not labels:
-        return raw
-    matches = get_close_matches(raw, labels, n=1, cutoff=0.75)
-    return matches[0] if matches else raw
-
-
-def correct_piece_ref(raw: str) -> str:
-    """Corrige une référence pièce par fuzzy matching."""
-    if not raw:
-        return raw
-    refs = [r.ref_piece for r in PieceRef.query.all()]
-    if not refs:
-        return raw
-    matches = get_close_matches(raw, refs, n=1, cutoff=0.80)
-    return matches[0] if matches else raw
-
-
+# ── Suggestions (autocomplétion front) ───────────────────────
 def suggest_machine_types(query: str, n: int = 5) -> list[str]:
-    """Retourne jusqu'à n suggestions fuzzy pour un type de machine."""
-    labels = [r.label for r in MachineTypeRef.query.all()]
-    if not labels:
-        return []
-    return get_close_matches(query, labels, n=n, cutoff=0.5)
+    from difflib import get_close_matches
+    labels = _load_labels_machines()
+    return get_close_matches(query, labels, n=n, cutoff=0.5) if labels else []
 
 
 def suggest_piece_refs(query: str, n: int = 5) -> list[str]:
-    """Retourne jusqu'à n suggestions fuzzy pour une référence pièce."""
-    refs = [r.ref_piece for r in PieceRef.query.all()]
-    if not refs:
-        return []
-    return get_close_matches(query, refs, n=n, cutoff=0.5)
-
-def get_machines():
-    """Retourne toutes les machines de référence."""
-    machines = MachineTypeRef.query.order_by(MachineTypeRef.marque).all()
-    return [
-        {
-            'id':           m.id,
-            'marque':       m.marque,
-            'modele':       m.modele,
-            'type_machine': m.type_machine,
-            'label':        m.label,  # @property Python — OK ici car pas dans SQL
-        }
-        for m in machines
-    ]
+    from difflib import get_close_matches
+    refs = list(_load_pieces_connues().keys())
+    return get_close_matches(query, refs, n=n, cutoff=0.5) if refs else []
