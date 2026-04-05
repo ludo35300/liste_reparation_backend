@@ -1,11 +1,8 @@
 import os
 import secrets 
-from dotenv import load_dotenv
 
-load_dotenv()
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-
-MISTRAL_API_KEY="tGR6zP6PLvlfG56xVgWMYQnJ57eelzDTM"
+MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
 
 class DevConfig:
     JWT_TOKEN_LOCATION = ["cookies"]
@@ -15,9 +12,7 @@ class DevConfig:
     JWT_COOKIE_SECURE = False          # True en prod (HTTPS)
     JWT_COOKIE_SAMESITE = "Lax"        # potentiellement "Strict" si même-site
 
-    JWT_SECRET_KEY = secrets.token_hex(32)   # en prod: variable d'env
-    # Dans ProdConfig
-    # JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", secrets.token_hex(32))
+    JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", secrets.token_hex(32)) 
 
     JWT_ACCESS_COOKIE_PATH = "/api/"
     JWT_REFRESH_COOKIE_PATH = "/api/auth/refresh"
@@ -37,7 +32,7 @@ class DevConfig:
 
 class ProdConfig(DevConfig):
     JWT_COOKIE_SECURE           = True
-    JWT_SECRET_KEY              = os.getenv('JWT_SECRET_KEY')
+    JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", secrets.token_hex(32)) 
     SQLALCHEMY_DATABASE_URI = os.getenv(
         'DATABASE_URL',
         'postgresql://user:password@localhost/reparations_db'

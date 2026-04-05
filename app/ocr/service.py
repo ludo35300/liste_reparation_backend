@@ -97,20 +97,6 @@ def _resoudre_technicien(nom_brut: str, techniciens: list) -> str:
             print(f"[Fuzzy] Technicien \'{nom_brut}\' → \'{matches[0]}\'")
             return matches[0]
 
-    # Fallback → utilisateur connecté via JWT
-    try:
-        from flask import has_request_context
-        from flask_jwt_extended import verify_jwt_in_request
-        if has_request_context():
-            verify_jwt_in_request()          # valide le token sans lever 422
-            user_id = get_jwt_identity()
-            user    = User.query.get(user_id)
-            if user:
-                print(f"[OCR] Technicien non reconnu → fallback JWT : {user.first_name}")
-                return user.first_name.upper()
-    except Exception as e:
-        print(f"[OCR] Impossible de récupérer l'utilisateur JWT : {e}")
-
     return nom_brut.upper() if nom_brut else ""
 
 # ─────────────────────────────────────────────────────────────────────────────

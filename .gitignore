@@ -83,3 +83,6 @@ secrets.json
 # Flask-JWT secrets (a changer !)
 /config/keys.py  # si tu mets ta clé là
 AuthModuleFront/
+
+# db.sqlite3
+*.db

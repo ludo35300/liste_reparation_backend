@@ -10,4 +10,6 @@ def scan():
     if 'image' not in request.files:
         return jsonify({"error": "Aucun fichier image reçu"}), 400
     result = analyser_fiche(request.files['image'].read())
+    if "erreur" in result:
+        return jsonify(result), 422
     return jsonify(result), 200
