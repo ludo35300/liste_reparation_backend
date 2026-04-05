@@ -2,6 +2,8 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_jwt_extended.exceptions import JWTExtendedException
 
+
+
 from .config import DevConfig
 from .extensions import jwt, limiter, db, migrate, ma
 from .http.errors import api_error
@@ -38,11 +40,14 @@ def create_app():
     from .reparations.controller import reparations_bp
     from .stats.controller       import stats_bp
     from .ocr.controller         import ocr_bp
+    from .references.controller import references_bp
+
 
     app.register_blueprint(auth_bp,        url_prefix='/api/auth')
     app.register_blueprint(user_bp,        url_prefix='/api')
     app.register_blueprint(reparations_bp, url_prefix='/api')
     app.register_blueprint(stats_bp,       url_prefix='/api')
     app.register_blueprint(ocr_bp,         url_prefix='/api')
+    app.register_blueprint(references_bp, url_prefix='/api')
 
     return app
