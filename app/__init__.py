@@ -1,11 +1,11 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_jwt_extended.exceptions import JWTExtendedException
-
 from .config import DevConfig
 from .extensions import jwt, limiter, db, migrate, ma
-from .http.errors import api_error
+from .core.errors import api_error
 from dotenv import load_dotenv
+
 load_dotenv()
 
 def create_app():
@@ -33,16 +33,19 @@ def create_app():
     ma.init_app(app)
 
     # ── Blueprints ────────────────────────────────────────
-    from .auth.controller        import auth_bp
-    from .user.controller        import user_bp
-    from .reparations.controller import reparations_bp
-    from .stats.controller       import stats_bp
-    from .ocr.controller         import ocr_bp
+    from .auth.routes        import auth_bp
+    from .user.routes        import user_bp
+    from .reparations.routes import reparations_bp
+    from .stats.routes       import stats_bp
+    from .ocr.routes         import ocr_bp
+    from .references.routes  import references_bp
+
 
     app.register_blueprint(auth_bp,        url_prefix='/api/auth')
     app.register_blueprint(user_bp,        url_prefix='/api')
     app.register_blueprint(reparations_bp, url_prefix='/api')
     app.register_blueprint(stats_bp,       url_prefix='/api')
     app.register_blueprint(ocr_bp,         url_prefix='/api')
+    app.register_blueprint(references_bp, url_prefix='/api')
 
     return app
