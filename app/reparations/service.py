@@ -31,11 +31,12 @@ def creer_reparation(data: dict) -> Reparation:
     machine_corrigee, _ = fuzzy_machine(data.get('machine_type', ''), labels)
 
     # ── FK machine ────────────────────────────────────────
+    machine_ref     = None                          # ← on garde l'objet, pas juste l'id
     machine_type_id = data.get('machine_type_id')
     if not machine_type_id and machine_corrigee:
         from app.models.reference import MachineTypeRef
-        ref = MachineTypeRef.find_by_label(machine_corrigee)
-        machine_type_id = ref.id if ref else None
+        machine_ref     = MachineTypeRef.find_by_label(machine_corrigee)
+        machine_type_id = machine_ref.id if machine_ref else None
 
     # ── FK technicien ─────────────────────────────────────
     technicien_id = data.get('technicien_id')
@@ -46,10 +47,10 @@ def creer_reparation(data: dict) -> Reparation:
 
     rep = Reparation(
         numero_serie    = data['numero_serie'].strip().upper(),
-        machine_type    = machine_corrigee,           # snapshot
-        machine_type_id = machine_type_id,            # FK
-        technicien      = data.get('technicien', ''), # snapshot
-        technicien_id   = technicien_id,              # FK
+        machine_type    = machine_corrigee,
+        machine_type_id = machine_type_id,
+        technicien      = data.get('technicien', ''),
+        technicien_id   = technicien_id,
         date_reparation = date_rep,
         notes           = data.get('notes', '')
     )
@@ -65,11 +66,15 @@ def creer_reparation(data: dict) -> Reparation:
         piece_obj    = PieceRef.query.filter_by(ref_piece=ref_corrigee).first()
         piece_ref_id = piece_obj.id if piece_obj else None
 
+        # ── Association machine ↔ pièce ───────────────────  ← NOUVEAU
+        if machine_ref and piece_obj and piece_obj not in machine_ref.pieces:
+            machine_ref.pieces.append(piece_obj)            # ← NOUVEAU
+
         db.session.add(PieceChangee(
             reparation_id = rep.id,
-            ref_piece     = ref_corrigee,                          # snapshot
-            designation   = designation or p.get('designation', ''), # snapshot
-            piece_ref_id  = piece_ref_id,                          # FK
+            ref_piece     = ref_corrigee,
+            designation   = designation or p.get('designation', ''),
+            piece_ref_id  = piece_ref_id,
             quantite      = int(p.get('quantite', 1))
         ))
 
