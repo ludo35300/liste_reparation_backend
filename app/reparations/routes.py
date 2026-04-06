@@ -2,14 +2,13 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
 from marshmallow import ValidationError
 
-from app.schemas import ReparationSchema, ReparationCreateSchema
+from app.schemas import ReparationSchema
 from . import service as svc
 
 
 reparations_bp = Blueprint('reparations', __name__)
 rep_schema     = ReparationSchema()
 reps_schema    = ReparationSchema(many=True)
-create_schema  = ReparationCreateSchema()
 
 
 # ── POST /reparations ─────────────────────────────────────────
@@ -17,7 +16,7 @@ create_schema  = ReparationCreateSchema()
 @jwt_required()
 def creer():
     try:
-        data = create_schema.load(request.get_json(force=True))
+        data = rep_schema.load(request.get_json(force=True))
     except ValidationError as e:
         return jsonify({"errors": e.messages}), 422
 

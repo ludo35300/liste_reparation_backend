@@ -1,5 +1,5 @@
-# app/models/piece_changee.py
 from app.extensions import db
+
 
 class PieceChangee(db.Model):
     __tablename__ = 'pieces_changees'
@@ -10,14 +10,20 @@ class PieceChangee(db.Model):
                               nullable=False, index=True)
     piece_ref_id  = db.Column(db.Integer,
                               db.ForeignKey('piece_refs.id', ondelete='RESTRICT'),
-                              nullable=False, index=True)        # ← obligatoire
-    ref_piece     = db.Column(db.String(50), nullable=False)    # snapshot léger
+                              nullable=False, index=True)
     quantite      = db.Column(db.Integer, nullable=False, default=1)
 
-    # ── Relation ──────────────────────────────────────────────
+    # Relation vers le catalogue
     piece_ref = db.relationship('PieceRef', foreign_keys=[piece_ref_id], lazy='select')
+
+    # Propriétés déléguées au catalogue (pas de duplication)
+    @property
+    def ref_piece(self) -> str:
+        return self.piece_ref.ref_piece if self.piece_ref else ''
 
     @property
     def designation(self) -> str:
         return self.piece_ref.designation if self.piece_ref else ''
+
+    def __repr__(self):
         return f'<PieceChangee {self.ref_piece} x{self.quantite}>'

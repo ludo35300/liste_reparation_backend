@@ -4,7 +4,7 @@ from flask_jwt_extended.exceptions import JWTExtendedException
 from .config import DevConfig
 from .extensions import jwt, limiter, db, migrate, ma
 from .core.errors import api_error
-from dotenv import load_dotenv
+from dotenv import load_dotenv 
 
 
 def create_app():
@@ -31,6 +31,13 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
     ma.init_app(app)
+
+    with app.app_context():
+        # imports des modèles ICI pour que Alembic les voit
+        from app.models.reference import MachineTypeRef, PieceRef
+        from app.models.piece_changee import PieceChangee
+        from app.models.reparation import Reparation
+        from app.models.user import User
 
     # ── Modèles EN PREMIER ────────────────────────────────
     from . import models  # ← import relatif, pas de conflit de nom

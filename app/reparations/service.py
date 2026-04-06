@@ -21,6 +21,8 @@ def _load_pieces_connues() -> dict:
 
 # ── CRUD ──────────────────────────────────────────────────────
 def creer_reparation(data: dict) -> Reparation:
+    from app.models.reference import MachineTypeRef, PieceRef
+
     date_rep = data['date_reparation']
     if isinstance(date_rep, str):
         date_rep = datetime.strptime(date_rep, '%d/%m/%Y').date()
@@ -30,24 +32,20 @@ def creer_reparation(data: dict) -> Reparation:
 
     machine_corrigee, _ = fuzzy_machine(data.get('machine_type', ''), labels)
 
-    # ── FK machine ────────────────────────────────────────
-    machine_ref     = None                          # ← on garde l'objet, pas juste l'id
-    machine_type_id = data.get('machine_type_id')
-    if not machine_type_id and machine_corrigee:
-        from app.models.reference import MachineTypeRef
-        machine_ref     = MachineTypeRef.find_by_label(machine_corrigee)
-        machine_type_id = machine_ref.id if machine_ref else None
+    # ── Résolution machine ────────────────────────────────────
+    machine_ref     = MachineTypeRef.find_by_label(machine_corrigee) if machine_corrigee else None
+    machine_type_id = machine_ref.id if machine_ref else None
 
-    # ── FK technicien ─────────────────────────────────────
-    technicien_id = data.get('technicien_id')
-    if not technicien_id and data.get('technicien'):
+    # ── Résolution technicien ─────────────────────────────────
+    technicien_id = None
+    if data.get('technicien'):
         from app.models.user import User
         user = User.query.filter_by(first_name=data['technicien']).first()
         technicien_id = user.id if user else None
 
     rep = Reparation(
         numero_serie    = data['numero_serie'].strip().upper(),
-        machine_type    = machine_corrigee,
+        machine_type    = machine_corrigee or data.get('machine_type', ''),
         machine_type_id = machine_type_id,
         technicien      = data.get('technicien', ''),
         technicien_id   = technicien_id,
@@ -58,23 +56,28 @@ def creer_reparation(data: dict) -> Reparation:
     db.session.flush()
 
     for p in data.get('pieces', []):
-        ref_brute    = p.get('ref_piece', '')
+        ref_brute    = p.get('ref_piece', '').strip().upper()
         ref_corrigee, designation, _ = fuzzy_piece(ref_brute, pieces_connues, cutoff=0.80)
 
-        # ── FK piece_ref ──────────────────────────────────
-        from app.models.reference import PieceRef
-        piece_obj    = PieceRef.query.filter_by(ref_piece=ref_corrigee).first()
-        piece_ref_id = piece_obj.id if piece_obj else None
+        # ── Cherche ou crée la PieceRef ───────────────────────
+        piece_obj = PieceRef.query.filter_by(ref_piece=ref_corrigee).first()
+        if not piece_obj:
+            # Nouvelle pièce → on la crée dans le catalogue
+            piece_obj = PieceRef(
+                ref_piece   = ref_corrigee,
+                designation = p.get('designation', designation or ref_corrigee)
+            )
+            db.session.add(piece_obj)
+            db.session.flush()  # obtenir l'id immédiatement
 
-        # ── Association machine ↔ pièce ───────────────────  ← NOUVEAU
-        if machine_ref and piece_obj and piece_obj not in machine_ref.pieces:
-            machine_ref.pieces.append(piece_obj)            # ← NOUVEAU
+        # ── Association machine ↔ pièce (si connue) ──────────
+        if machine_ref and piece_obj not in machine_ref.pieces:
+            machine_ref.pieces.append(piece_obj)
 
+        # ── Enregistre la pièce changée ───────────────────────
         db.session.add(PieceChangee(
             reparation_id = rep.id,
-            ref_piece     = ref_corrigee,
-            designation   = designation or p.get('designation', ''),
-            piece_ref_id  = piece_ref_id,
+            piece_ref_id  = piece_obj.id,
             quantite      = int(p.get('quantite', 1))
         ))
 
