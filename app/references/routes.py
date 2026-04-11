@@ -106,6 +106,13 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp', 'svg'}
 def allowed_file(filename: str) -> bool:
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+# ── GET /machines/<id>/pieces ──────────────────────────────────
+@references_bp.route('/machines/<int:machine_id>/pieces', methods=['GET'])
+@jwt_required()
+def get_pieces_by_machine(machine_id):
+    pieces = svc.get_pieces_by_machine(machine_id)
+    return jsonify(pieces_schema.dump(pieces)), 200
+
 
 # ── PATCH /machines/<id>/logo ──────────────────────────────
 @references_bp.route('/machines/<int:machine_id>/logo', methods=['PATCH'])

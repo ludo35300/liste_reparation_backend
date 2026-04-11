@@ -1,5 +1,7 @@
-from app.extensions import db
+# app/models/user.py
 from datetime import datetime
+from app.extensions import db
+
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -12,6 +14,11 @@ class User(db.Model):
     reset_token         = db.Column(db.String(255), nullable=True)
     reset_token_expires = db.Column(db.DateTime,    nullable=True)
     created_at          = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relation inverse vers les réparations
+    reparations = db.relationship('Reparation', back_populates='technicien_ref',
+                                  foreign_keys='Reparation.technicien_id',
+                                  lazy='dynamic')
 
     def __repr__(self):
         return f'<User {self.email}>'
