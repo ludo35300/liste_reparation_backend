@@ -1,7 +1,8 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_jwt_extended.exceptions import JWTExtendedException
-from .config import DevConfig
+from .config import DevConfig, ProdConfig
+import os
 from .extensions import jwt, limiter, db, migrate, ma
 from .core.errors import api_error
 from dotenv import load_dotenv
@@ -10,7 +11,7 @@ load_dotenv()
 
 def create_app():
     app = Flask(__name__)
-    app.config.from_object(DevConfig)
+    app.config.from_object(ProdConfig if os.getenv("FLASK_ENV") == 'production' else DevConfig)
 
     # ── Gestion des erreurs ───────────────────────────────
     @app.errorhandler(JWTExtendedException)
