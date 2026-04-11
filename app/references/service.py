@@ -64,6 +64,10 @@ def remove_piece_from_machine(machine_id: int, piece_id: int):
         db.session.commit()
     return machine
 
+def get_pieces_by_machine(machine_id: int):
+    machine = MachineTypeRef.query.get_or_404(machine_id)
+    return machine.pieces
+
 def update_machine_logo(machine_id: int, url_logo: str) -> MachineTypeRef:
     machine = MachineTypeRef.query.get_or_404(machine_id)
     machine.url_logo = url_logo   # ← url_logo
