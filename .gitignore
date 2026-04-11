@@ -86,3 +86,5 @@ AuthModuleFront/
 
 # db.sqlite3
 *.db
+.env.prod
+.env.prod.db
