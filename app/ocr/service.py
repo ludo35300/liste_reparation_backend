@@ -50,9 +50,9 @@ def _prenoms_techniciens() -> list:
 
 # ── Compression image ─────────────────────────────────────────
 def _compresser_image(file_bytes: bytes, max_width: int = 2400, qualite: int = 80) -> str:
-    Image.MAX_IMAGE_PIXELS = None
+    #Image.MAX_IMAGE_PIXELS = None
     image = Image.open(io.BytesIO(file_bytes))
-    image.draft("RGB", (max_width, max_width * 2))
+    #image.draft("RGB", (max_width, max_width * 2))
     image = image.convert("RGB")
     w, h  = image.size
     if w > max_width:
