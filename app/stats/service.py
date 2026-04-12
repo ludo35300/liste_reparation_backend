@@ -1,15 +1,18 @@
-# app/stats/service.py
 from sqlalchemy import distinct, func
-from app.extensions          import db
-from app.models.reference import PieceRef
-from app.models.reparation   import Reparation
+from sqlalchemy.orm import joinedload
+from app.extensions           import db
+from app.models.reference     import PieceRef
+from app.models.reparation    import Reparation
 from app.models.piece_changee import PieceChangee
 
 
 def get_stats_globales() -> dict:
     total_reps   = db.session.query(func.count(Reparation.id)).scalar() or 0
     total_pieces = db.session.query(func.sum(PieceChangee.quantite)).scalar() or 0
-    machines_uniques = db.session.query(func.count(distinct(Reparation.numero_serie))).scalar() or 0
+    machines_uniques = db.session.query(
+        func.count(distinct(Reparation.numero_serie))
+    ).scalar() or 0
+
     # ── Top 10 pièces les plus changées ───────────────────────────
     top_pieces = (
         db.session.query(
@@ -23,6 +26,15 @@ def get_stats_globales() -> dict:
         .limit(10)
         .all()
     )
+
+    # ── Toutes les réparations avec leurs pièces ──────────────────
+    reparations = (
+        db.session.query(Reparation)
+        .options(joinedload(Reparation.pieces))   # évite le N+1
+        .order_by(Reparation.date_reparation.desc())
+        .all()
+    )
+
     return {
         "total_reparations": int(total_reps),
         "total_pieces":      int(total_pieces),
@@ -34,5 +46,24 @@ def get_stats_globales() -> dict:
                 "total":       int(p.total),
             }
             for p in top_pieces
+        ],
+        "reparations": [
+            {
+                "id":               r.id,
+                "numero_serie":     r.numero_serie,
+                "machine_type":     r.machine_type,
+                "technicien":       r.technicien,
+                "date_reparation":  r.date_reparation,
+                "notes":            r.notes,
+                "pieces": [
+                    {
+                        "ref_piece":   pc.ref_piece,
+                        "designation": pc.designation,
+                        "quantite":    pc.quantite,
+                    }
+                    for pc in (r.pieces or [])
+                ],
+            }
+            for r in reparations
         ],
     }
