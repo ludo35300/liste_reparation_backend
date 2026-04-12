@@ -5,12 +5,8 @@ class PieceChangee(db.Model):
     __tablename__ = 'pieces_changees'
 
     id            = db.Column(db.Integer, primary_key=True)
-    reparation_id = db.Column(db.Integer,
-                              db.ForeignKey('reparations.id', ondelete='CASCADE'),
-                              nullable=False, index=True)
-    piece_ref_id  = db.Column(db.Integer,
-                              db.ForeignKey('piece_refs.id', ondelete='RESTRICT'),
-                              nullable=False, index=True)
+    reparation_id = db.Column(db.Integer, db.ForeignKey('reparations.id', ondelete='CASCADE'), nullable=False, index=True)
+    piece_ref_id  = db.Column(db.Integer, db.ForeignKey('piece_refs.id', ondelete='RESTRICT'), nullable=False, index=True)
     quantite      = db.Column(db.Integer, nullable=False, default=1)
 
     # Relation vers le catalogue
