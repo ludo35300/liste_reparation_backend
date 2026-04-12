@@ -49,14 +49,8 @@ def _prenoms_techniciens() -> list:
 
 
 # ── Compression image ─────────────────────────────────────────
-def _compresser_image(file_bytes: bytes, max_width: int = 2400, qualite: int = 80) -> str:
-    #Image.MAX_IMAGE_PIXELS = None
+def _compresser_image(file_bytes: bytes, qualite: int = 100) -> str:
     image = Image.open(io.BytesIO(file_bytes))
-    #image.draft("RGB", (max_width, max_width * 2))
-    image = image.convert("RGB")
-    w, h  = image.size
-    if w > max_width:
-        image = image.resize((max_width, int(h * max_width / w)), Image.LANCZOS)
     buf = io.BytesIO()
     image.save(buf, format="JPEG", quality=qualite, optimize=True)
     b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
