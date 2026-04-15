@@ -64,3 +64,15 @@ def suggest_piece_ref():
     query = request.args.get('q', '').strip()
     matches = svc.suggest_piece_refs(query)
     return jsonify(matches), 200
+
+# ── GET /reparations/search?q=<numero_serie> ─────────────────
+# Recherche enrichie : historique + infos machine + vue éclatée
+@reparations_bp.route('/reparations/search', methods=['GET'])
+@jwt_required()
+def search():
+    q = request.args.get('q', '').strip()
+    if not q:
+        return jsonify({"error": "Paramètre 'q' requis"}), 400
+
+    results = svc.search_numero_serie(q)
+    return jsonify(results), 200
