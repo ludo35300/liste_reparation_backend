@@ -1,16 +1,13 @@
-"""
-Créer un utilisateur en base de données.
-Usage : python scripts/create_user.py
-"""
 import sys
 import os
 import getpass
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+from dotenv import load_dotenv
+load_dotenv()   # ← AVANT create_app
+
 from app import create_app
-from app.security.passwords import hash_password
-from app.repositories.database import create_user, get_user_by_email, norm_email
 
 app = create_app()
 
@@ -25,7 +22,6 @@ def main():
     password   = getpass.getpass("Mot de passe: ")
     confirm    = getpass.getpass("Confirmer   : ")
 
-    # ── Validations ───────────────────────────────────────────
     if not email or not password:
         print("❌ Email et mot de passe requis.")
         sys.exit(1)
@@ -39,6 +35,9 @@ def main():
         sys.exit(1)
 
     with app.app_context():
+        from app.security.passwords import hash_password
+        from app.repositories.database import create_user, get_user_by_email, norm_email
+
         email = norm_email(email)
 
         if get_user_by_email(email):
