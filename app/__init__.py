@@ -5,7 +5,7 @@ from .config import DevConfig, ProdConfig
 import os
 from .extensions import jwt, limiter, db, migrate, ma
 from .core.errors import api_error
-from dotenv import load_dotenv 
+from dotenv import load_dotenv
 
 
 def create_app():
@@ -13,7 +13,6 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(ProdConfig if os.getenv("FLASK_ENV") == 'production' else DevConfig)
 
-    # ── Gestion des erreurs ───────────────────────────────
     @app.errorhandler(JWTExtendedException)
     def handle_jwt_error(e):
         return api_error('Non authentifié', 401, code='AUTH_REQUIRED')
@@ -25,7 +24,6 @@ def create_app():
         resp.headers['Retry-After'] = '60'
         return resp
 
-    # ── Extensions ────────────────────────────────────────
     CORS(app, origins=app.config['CORS_ORIGINS'], supports_credentials=True)
     jwt.init_app(app)
     limiter.init_app(app)
@@ -34,18 +32,17 @@ def create_app():
     ma.init_app(app)
 
     with app.app_context():
-        # imports des modèles ICI pour que Alembic les voit
-        from app.models.reference import MachineTypeRef, PieceRef
-        from app.models.piece_changee import PieceChangee
-        from app.models.reparation import Reparation
-        from app.models.user import User
+        # Import centralisé — Alembic voit tous les modèles via __init__.py
+        from app.models import (  # noqa: F401
+            Marque, Modele, modele_piece_refs,
+            Machine, PieceRef,
+            Reparation, PieceChangee,
+            User, PasswordResetToken
+        )
 
-    # ── Modèles EN PREMIER ────────────────────────────────
-    from . import models  # ← import relatif, pas de conflit de nom
-
-    # ── Blueprints ────────────────────────────────────────
     from .auth.routes        import auth_bp
     from .user.routes        import user_bp
+    from .machines_crud.routes  import machines_bp
     from .reparations.routes import reparations_bp
     from .stats.routes       import stats_bp
     from .ocr.routes         import ocr_bp
@@ -53,6 +50,7 @@ def create_app():
 
     app.register_blueprint(auth_bp,        url_prefix='/api/auth')
     app.register_blueprint(user_bp,        url_prefix='/api')
+    app.register_blueprint(machines_bp,    url_prefix='/api')
     app.register_blueprint(reparations_bp, url_prefix='/api')
     app.register_blueprint(stats_bp,       url_prefix='/api')
     app.register_blueprint(ocr_bp,         url_prefix='/api')

@@ -1,1 +1,5 @@
-from .schemas import PieceChangeeSchema, PieceRefSchema, MachineTypeRefSchema, MachineTypeRefSimpleSchema, ReparationSchema
+from .schemas import (
+    MarqueSchema, ModeleSchema, ModeleSimpleSchema,
+    PieceRefSchema, MachineSchema,
+    PieceChangeeSchema, ReparationSchema,
+)

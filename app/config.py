@@ -21,8 +21,10 @@ class DevConfig:
 
     CORS_ORIGINS                = ["http://localhost:4200"]
 
-    SQLALCHEMY_DATABASE_URI     = 'sqlite:///' + os.path.join(BASE_DIR, 'reparations_dev.db')
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_DATABASE_URI     = os.getenv(
+        'DATABASE_URL',
+        'postgresql://user:password@localhost/reparations_db'
+    )
 
     MAX_CONTENT_LENGTH          = 32 * 1024 * 1024   # 32 Mo
     JSON_ENSURE_ASCII           = False
