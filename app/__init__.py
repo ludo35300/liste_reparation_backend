@@ -41,13 +41,12 @@ def create_app():
         )
 
     from .auth.routes        import auth_bp
-    from .user.routes        import user_bp
-    from .machines_crud.routes  import machines_bp
-    from .reparations.routes import reparations_bp
-    from .stats.routes       import stats_bp
+    from .controllers.user_controller        import user_bp
+    from .controllers.machines_controller  import machines_bp
+    from .controllers.reparations_controller import reparations_bp
+    from .controllers.statistiques_controller       import stats_bp
     from .ocr.routes         import ocr_bp
-    from .references.routes  import references_bp
-    from .techniciens.routes  import techniciens_bp
+    from .controllers.references_controller  import references_bp
 
     app.register_blueprint(auth_bp,        url_prefix='/api/auth')
     app.register_blueprint(user_bp,        url_prefix='/api')
@@ -56,6 +55,5 @@ def create_app():
     app.register_blueprint(stats_bp,       url_prefix='/api')
     app.register_blueprint(ocr_bp,         url_prefix='/api')
     app.register_blueprint(references_bp,  url_prefix='/api')
-    app.register_blueprint(techniciens_bp,  url_prefix='/api')
 
     return app

@@ -5,7 +5,7 @@ from werkzeug.utils import secure_filename
 from app.schemas import (
     MarqueSchema, ModeleSchema, ModeleSimpleSchema, PieceRefSchema
 )
-from . import service as svc
+from app.services import references_service as svc
 
 references_bp = Blueprint('references', __name__)
 
