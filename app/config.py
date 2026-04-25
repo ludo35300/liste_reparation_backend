@@ -21,10 +21,7 @@ class DevConfig:
 
     CORS_ORIGINS                = ["http://localhost:4200"]
 
-    SQLALCHEMY_DATABASE_URI     = os.getenv(
-        'DATABASE_URL',
-        'postgresql://user:password@localhost/reparations_db'
-    )
+    SQLALCHEMY_DATABASE_URI     = os.getenv('DATABASE_URL')
 
     MAX_CONTENT_LENGTH          = 32 * 1024 * 1024   # 32 Mo
     JSON_ENSURE_ASCII           = False
@@ -32,8 +29,5 @@ class DevConfig:
 
 class ProdConfig(DevConfig):
     JWT_COOKIE_SECURE           = True
-    SQLALCHEMY_DATABASE_URI     = os.getenv(
-        'DATABASE_URL',
-        'postgresql://user:password@localhost/reparations_db'
-    )
+    SQLALCHEMY_DATABASE_URI     = os.getenv('DATABASE_URL')
     CORS_ORIGINS                = os.getenv('CORS_ORIGINS', 'http://localhost:4200').split(',')
