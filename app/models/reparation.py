@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from app.extensions import db
 
 
@@ -15,7 +15,7 @@ class Reparation(db.Model):
     technicien      = db.Column(db.String(100), default='')   # snapshot nom technicien
     date_reparation = db.Column(db.Date, nullable=False)
     description     = db.Column(db.Text, default='')
-    created_at      = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     machine        = db.relationship('Machine', back_populates='reparations')
     technicien_ref = db.relationship('User',    back_populates='reparations',

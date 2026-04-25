@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from app.extensions import db
 
 
@@ -10,7 +10,7 @@ class User(db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     first_name    = db.Column(db.String(100), nullable=False, default='')
     last_name     = db.Column(db.String(100), nullable=False, default='')
-    created_at    = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at    = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     reparations   = db.relationship('Reparation', back_populates='technicien_ref',
                                     foreign_keys='Reparation.technicien_id',
