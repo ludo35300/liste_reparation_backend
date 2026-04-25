@@ -7,6 +7,9 @@ def _norm_email(email: str) -> str:
 
 
 class UserRepository:
+    @staticmethod
+    def norm_email(email: str) -> str:
+        return (email or '').strip().lower()
 
     @staticmethod
     def get_by_id(user_id: int) -> User | None:
