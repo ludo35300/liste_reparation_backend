@@ -6,7 +6,6 @@ from .santos_40a import Santos40AHandler
 _HANDLERS: list[type[MachineHandler]] = [
     Santos40AHandler,
     # Santos43Handler,  # à venir
-    # RancilioHandler,  # à venir
 ]
 
 

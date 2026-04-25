@@ -47,6 +47,7 @@ def create_app():
     from .stats.routes       import stats_bp
     from .ocr.routes         import ocr_bp
     from .references.routes  import references_bp
+    from .techniciens.routes  import techniciens_bp
 
     app.register_blueprint(auth_bp,        url_prefix='/api/auth')
     app.register_blueprint(user_bp,        url_prefix='/api')
@@ -55,5 +56,6 @@ def create_app():
     app.register_blueprint(stats_bp,       url_prefix='/api')
     app.register_blueprint(ocr_bp,         url_prefix='/api')
     app.register_blueprint(references_bp,  url_prefix='/api')
+    app.register_blueprint(techniciens_bp,  url_prefix='/api')
 
     return app

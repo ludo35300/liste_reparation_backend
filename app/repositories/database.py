@@ -13,6 +13,8 @@ def get_user_by_email(email: str) -> User | None:
 def get_user_by_id(user_id: int) -> User | None:
     return db.session.get(User, user_id)
 
+def get_all_users() -> list[User]:
+    return User.query.order_by(User.first_name.asc(), User.last_name.asc()).all()
 
 def create_user(email: str, password_hash: str,
                 first_name: str, last_name: str) -> User:
