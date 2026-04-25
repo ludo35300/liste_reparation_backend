@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from app.extensions import db
 
 STATUTS_VALIDES = ('en_attente', 'en_reparation', 'pret', 'termine')
@@ -15,7 +15,7 @@ class Machine(db.Model):
     statut       = db.Column(db.String(20), nullable=False, default='en_attente')
     date_entree  = db.Column(db.Date, nullable=True)
     notes        = db.Column(db.Text, default='')
-    created_at   = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     __table_args__ = (
         db.CheckConstraint(

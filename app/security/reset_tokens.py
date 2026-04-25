@@ -1,5 +1,5 @@
-import time, secrets, hashlib
-from datetime import datetime, timedelta
+import secrets, hashlib
+from datetime import datetime, timedelta, timezone
 
 
 def generate_raw_token() -> str:
@@ -14,9 +14,11 @@ def hash_token(raw: str) -> str:
 
 def token_expiry(ttl_seconds: int = 30 * 60) -> datetime:
     """Retourne la date d'expiration."""
-    return datetime.utcnow() + timedelta(seconds=ttl_seconds)
+    return datetime.now(timezone.utc) + timedelta(seconds=ttl_seconds)
 
 
 def is_token_valid(expires: datetime) -> bool:
     """Vérifie que le token n'est pas expiré."""
-    return datetime.utcnow() < expires
+    if expires.tzinfo is None:
+        expires = expires.replace(tzinfo=timezone.utc)
+    return datetime.now(timezone.utc) < expires

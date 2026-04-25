@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from app.extensions import db
 
 
@@ -16,7 +16,7 @@ class PasswordResetToken(db.Model):
 
     @property
     def is_expired(self) -> bool:
-        return datetime.utcnow() > self.expires_at
+        return datetime.now(timezone.utc) > self.expires_at.replace(tzinfo=timezone.utc)
 
     def __repr__(self):
         return f'<PasswordResetToken user_id={self.user_id}>'

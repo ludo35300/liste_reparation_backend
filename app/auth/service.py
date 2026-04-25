@@ -82,7 +82,7 @@ def reset_password(token: str, new_password: str):
     token_hash = hash_token(token.strip())
     user       = UserRepository.get_by_reset_token(token_hash)
 
-    if not user or not is_token_valid(user.reset_token_expires):
+    if not user or not user.reset_token or not is_token_valid(user.reset_token.expires_at):
         return jsonify({"message": "Lien invalide ou expiré"}), 400
 
     UserRepository.update_password(user, hash_password(new_password))
