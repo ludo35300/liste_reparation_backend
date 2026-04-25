@@ -1,4 +1,5 @@
 from flask import Flask, jsonify
+from marshmallow import ValidationError
 from flask_cors import CORS
 from flask_jwt_extended.exceptions import JWTExtendedException
 from .config import DevConfig, ProdConfig
@@ -16,6 +17,10 @@ def create_app():
     @app.errorhandler(JWTExtendedException)
     def handle_jwt_error(e):
         return api_error('Non authentifié', 401, code='AUTH_REQUIRED')
+    
+    @app.errorhandler(ValidationError)
+    def handle_validation_error(e):
+        return api_error('Données invalides', 422, code='VALIDATION_ERROR', details=e.messages)
 
     @app.errorhandler(429)
     def ratelimit_handler(e):

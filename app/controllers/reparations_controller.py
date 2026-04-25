@@ -40,13 +40,8 @@ def get_by_serie(numero_serie):
 @reparations_bp.route('/reparations', methods=['POST'])
 @jwt_required()
 def create_reparation():
-    data = request.get_json(force=True)
-    if not data.get('machine_id') or not data.get('date_reparation'):
-        return api_error('machine_id et date_reparation requis', 422, code='VALIDATION_ERROR')
-    try:
-        rep = svc.creer_reparation(data)
-    except ValueError as e:
-        return api_error(str(e), 422, code='VALIDATION_ERROR')
+    data = rep_schema.load(request.get_json(force=True) or {})
+    rep  = svc.creer_reparation(data)
     return jsonify(rep_schema.dump(rep)), 201
 
 

@@ -12,13 +12,10 @@ from app.utils.fuzzy import fuzzy_piece
 
 
 def creer_reparation(data: dict) -> Reparation:
-    date_str = (data.get('date_reparation') or '').strip()
-    if not date_str:
+    date_val = data.get('date_reparation')
+    if not date_val:
         raise ValueError("date_reparation est requis.")
-    try:
-        date_rep = date_type.fromisoformat(date_str)
-    except ValueError:
-        raise ValueError(f"Format de date invalide : {date_str!r}. Attendu : YYYY-MM-DD")
+    date_rep = date_val if isinstance(date_val, date_type) else date_type.fromisoformat(str(date_val).strip())
 
     technicien_id = data.get('technicien_id') or None
 

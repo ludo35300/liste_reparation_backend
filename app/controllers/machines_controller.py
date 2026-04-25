@@ -22,9 +22,7 @@ def get_machine(machine_id):
 @machines_bp.route('/machines', methods=['POST'])
 @jwt_required()
 def create_machine():
-    data = request.get_json(force=True)
-    if not data.get('numero_serie'):
-        return api_error('numero_serie requis', 422, code='VALIDATION_ERROR')
+    data = mach_schema.load(request.get_json(force=True) or {})
     try:
         machine = svc.create_machine(data)
     except ValueError as e:
@@ -34,7 +32,7 @@ def create_machine():
 @machines_bp.route('/machines/<int:machine_id>', methods=['PATCH'])
 @jwt_required()
 def update_machine(machine_id):
-    data = request.get_json(force=True)
+    data = mach_schema.load(request.get_json(force=True) or {}, partial=True)
     machine = svc.update_machine(machine_id, data)
     return jsonify(mach_schema.dump(machine)), 200
 
