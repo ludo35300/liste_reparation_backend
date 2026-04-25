@@ -15,7 +15,11 @@ def creer_reparation(data: dict) -> Reparation:
     date_val = data.get('date_reparation')
     if not date_val:
         raise ValueError("date_reparation est requis.")
-    date_rep = date_val if isinstance(date_val, date_type) else date_type.fromisoformat(str(date_val).strip())
+    try:
+        date_rep = date_val if isinstance(date_val, date_type) \
+            else date_type.fromisoformat(str(date_val).strip())
+    except ValueError:
+        raise ValueError(f"Format de date invalide : {date_val!r}. Attendu : YYYY-MM-DD")
 
     technicien_id = data.get('technicien_id') or None
 

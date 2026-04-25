@@ -31,3 +31,12 @@ class ProdConfig(DevConfig):
     JWT_COOKIE_SECURE           = True
     SQLALCHEMY_DATABASE_URI     = os.getenv('DATABASE_URL')
     CORS_ORIGINS                = os.getenv('CORS_ORIGINS', 'http://localhost:4200').split(',')
+
+class TestConfig(DevConfig):
+    TESTING                 = True
+    SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+    JWT_COOKIE_CSRF_PROTECT = False   # simplifie les tests
+    JWT_COOKIE_SECURE       = False
+    RATELIMIT_ENABLED       = False
+    WTF_CSRF_ENABLED        = False
+    JWT_TOKEN_LOCATION      = ["headers"]

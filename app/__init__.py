@@ -9,10 +9,12 @@ from .core.errors import api_error
 from dotenv import load_dotenv
 
 
-def create_app():
+def create_app(config=None):
     load_dotenv()
     app = Flask(__name__)
     app.config.from_object(ProdConfig if os.getenv("FLASK_ENV") == 'production' else DevConfig)
+    if config is not None:
+        app.config.from_object(config)
 
     @app.errorhandler(JWTExtendedException)
     def handle_jwt_error(e):

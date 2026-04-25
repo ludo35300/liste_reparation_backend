@@ -15,7 +15,6 @@ from app.repositories.user_repository import UserRepository
 
 logger = logging.getLogger(__name__)
 
-
 def login_user(email: str, password: str):
     user = UserRepository.get_by_email(UserRepository.norm_email(email))
     if not user or not verify_password(password or '', user.password_hash):
