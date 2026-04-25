@@ -36,11 +36,8 @@ def get_marque(marque_id):
 @references_bp.route('/marques', methods=['POST'])
 @jwt_required()
 def create_marque():
-    data = request.get_json(force=True)
-    nom  = data.get('nom', '').strip()
-    if not nom:
-        return api_error('nom requis', 422, code='VALIDATION_ERROR')
-    return jsonify(marque_schema.dump(svc.create_marque(nom, data.get('url_logo')))), 201
+    data = marque_schema.load(request.get_json(force=True) or {})
+    return jsonify(marque_schema.dump(svc.create_marque(data['nom'], data.get('url_logo')))), 201
 
 @references_bp.route('/marques/<int:marque_id>', methods=['DELETE'])
 @jwt_required()
@@ -80,13 +77,8 @@ def get_modele(modele_id):
 @references_bp.route('/modeles', methods=['POST'])
 @jwt_required()
 def create_modele():
-    data         = request.get_json(force=True)
-    nom          = data.get('nom', '').strip()
-    type_machine = data.get('type_machine', '').strip()
-    marque_id    = data.get('marque_id')
-    if not nom or not type_machine or not marque_id:
-        return api_error('nom, type_machine et marque_id requis', 422, code='VALIDATION_ERROR')
-    return jsonify(modele_schema.dump(svc.create_modele(nom, type_machine, marque_id))), 201
+    data = modele_schema.load(request.get_json(force=True) or {})
+    return jsonify(modele_schema.dump(svc.create_modele(data['nom'], data['type_machine'], data['marque_id']))), 201
 
 @references_bp.route('/modeles/<int:modele_id>', methods=['DELETE'])
 @jwt_required()
@@ -124,13 +116,8 @@ def get_piece(piece_id):
 @references_bp.route('/pieces', methods=['POST'])
 @jwt_required()
 def create_piece():
-    data        = request.get_json(force=True)
-    ref_piece   = data.get('ref_piece', '').strip()
-    designation = data.get('designation', '').strip()
-    marque_id   = data.get('marque_id')
-    if not ref_piece or not marque_id:
-        return api_error('ref_piece et marque_id requis', 422, code='VALIDATION_ERROR')
-    return jsonify(piece_schema.dump(svc.create_piece(ref_piece, designation, marque_id))), 201
+    data = piece_schema.load(request.get_json(force=True) or {})
+    return jsonify(piece_schema.dump(svc.create_piece(data['ref_piece'], data.get('designation', ''), data['marque_id']))), 201
 
 @references_bp.route('/pieces/<int:piece_id>', methods=['DELETE'])
 @jwt_required()
