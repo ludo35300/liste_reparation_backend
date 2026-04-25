@@ -1,29 +1,36 @@
 from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from app.repositories.database import get_user_by_id, get_all_users
+
+from app.core.errors import api_error
+from app.repositories.user_repository import UserRepository
 
 user_bp = Blueprint('user', __name__)
+
 
 @user_bp.get('/me')
 @jwt_required()
 def me():
-    user = get_user_by_id(int(get_jwt_identity()))
+    user = UserRepository.get_by_id(int(get_jwt_identity()))
     if not user:
-        return jsonify({"message": "Non authentifié"}), 401
+        return api_error("Non authentifié", 401, code="AUTH_REQUIRED")
+
     return jsonify({
-        "email":     user.email,
+        "email": user.email,
         "firstName": user.first_name,
-        "lastName":  user.last_name
+        "lastName": user.last_name,
     }), 200
 
+
+@user_bp.get('/techniciens')
+@jwt_required()
 def get_techniciens():
-    users = get_all_users()
+    users = UserRepository.get_all()
 
     return jsonify([
         {
-            'id': user.id,
-            'email': user.email,
-            'nom': f'{user.first_name} {user.last_name}'.strip(),
+            "id": user.id,
+            "email": user.email,
+            "nom": f"{user.first_name} {user.last_name}".strip(),
         }
         for user in users
-    ])
+    ]), 200
