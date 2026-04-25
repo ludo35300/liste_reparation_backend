@@ -6,6 +6,7 @@ from app.schemas import (
     MarqueSchema, ModeleSchema, ModeleSimpleSchema, PieceRefSchema
 )
 from app.services import references_service as svc
+from app.core.errors import api_error
 
 references_bp = Blueprint('references', __name__)
 
@@ -38,7 +39,7 @@ def create_marque():
     data = request.get_json(force=True)
     nom  = data.get('nom', '').strip()
     if not nom:
-        return jsonify({'error': 'nom requis'}), 422
+        return api_error('nom requis', 422, code='VALIDATION_ERROR')
     return jsonify(marque_schema.dump(svc.create_marque(nom, data.get('url_logo')))), 201
 
 @references_bp.route('/marques/<int:marque_id>', methods=['DELETE'])
@@ -51,10 +52,10 @@ def delete_marque(marque_id):
 @jwt_required()
 def upload_logo_marque(marque_id):
     if 'logo' not in request.files:
-        return jsonify({'error': 'Fichier logo manquant'}), 422
+        return api_error('Fichier logo manquant', 422, code='VALIDATION_ERROR')
     file = request.files['logo']
     if not file.filename or not allowed_file(file.filename):
-        return jsonify({'error': 'Format non supporté (png, jpg, webp, svg)'}), 422
+        return api_error('Format non supporté (png, jpg, webp, svg)', 422, code='VALIDATION_ERROR')
     marque   = svc.get_marque_by_id(marque_id)
     ext      = file.filename.rsplit('.', 1)[1].lower()
     filename = secure_filename(f"{marque.nom}.{ext}")
@@ -84,7 +85,7 @@ def create_modele():
     type_machine = data.get('type_machine', '').strip()
     marque_id    = data.get('marque_id')
     if not nom or not type_machine or not marque_id:
-        return jsonify({'error': 'nom, type_machine et marque_id requis'}), 422
+        return api_error('nom, type_machine et marque_id requis', 422, code='VALIDATION_ERROR')
     return jsonify(modele_schema.dump(svc.create_modele(nom, type_machine, marque_id))), 201
 
 @references_bp.route('/modeles/<int:modele_id>', methods=['DELETE'])
@@ -128,7 +129,7 @@ def create_piece():
     designation = data.get('designation', '').strip()
     marque_id   = data.get('marque_id')
     if not ref_piece or not marque_id:
-        return jsonify({'error': 'ref_piece et marque_id requis'}), 422
+        return api_error('ref_piece et marque_id requis', 422, code='VALIDATION_ERROR')
     return jsonify(piece_schema.dump(svc.create_piece(ref_piece, designation, marque_id))), 201
 
 @references_bp.route('/pieces/<int:piece_id>', methods=['DELETE'])
