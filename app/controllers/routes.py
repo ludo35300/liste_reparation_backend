@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
 from app.schemas import MachineSchema
-from . import service as svc
+from ..services import machines_service as svc
 
 machines_bp  = Blueprint('machines', __name__)
 mach_schema  = MachineSchema()

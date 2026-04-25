@@ -5,7 +5,7 @@ from app.repositories.piece_repository    import PieceRefRepository
 from app.repositories.modele_repository   import ModeleRepository
 from app.repositories.user_repository     import UserRepository
 from app.schemas import ReparationSchema
-from . import service as svc
+from app.services import reparations_service as svc
 
 reparations_bp = Blueprint('reparations', __name__)
 rep_schema     = ReparationSchema()

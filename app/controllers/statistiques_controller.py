@@ -1,7 +1,7 @@
 # app/stats/routes.py
 from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required
-from . import service as svc
+from app.services import statistiques_service as svc
 
 stats_bp = Blueprint('stats', __name__)
 
