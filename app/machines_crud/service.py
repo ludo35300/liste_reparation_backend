@@ -1,30 +1,24 @@
-from sqlalchemy.orm import joinedload
-from app.extensions   import db
-from app.models.machine import Machine
-from app.models.modele  import Modele
-from app.machines       import resolve_machine_info
+from app.models.machine          import Machine
+from app.models.modele           import Modele
+from app.repositories.machine_repository import MachineRepository
+from app.machines                import resolve_machine_info
 
 
-def get_all_machines():
-    return (Machine.query
-            .options(joinedload(Machine.modele).joinedload(Modele.marque))
-            .order_by(Machine.created_at.desc())
-            .all())
+def get_all_machines() -> list[Machine]:
+    return MachineRepository.get_all()
 
 
 def get_machine_by_id(machine_id: int) -> Machine:
-    return db.get_or_404(Machine, machine_id)
+    return MachineRepository.get_by_id(machine_id)
 
 
 def get_machine_by_serie(numero_serie: str) -> Machine | None:
-    return Machine.query.filter_by(
-        numero_serie=numero_serie.strip().upper()
-    ).first()
+    return MachineRepository.get_by_serie(numero_serie)
 
 
 def create_machine(data: dict) -> Machine:
     numero_serie = data['numero_serie'].strip().upper()
-    if Machine.query.filter_by(numero_serie=numero_serie).first():
+    if MachineRepository.exists_by_serie(numero_serie):
         raise ValueError(f"Numéro de série '{numero_serie}' déjà enregistré")
 
     machine = Machine(
@@ -34,29 +28,25 @@ def create_machine(data: dict) -> Machine:
         date_entree  = data.get('date_entree'),
         notes        = data.get('notes', ''),
     )
-    db.session.add(machine)
-    db.session.commit()
-    return machine
+    return MachineRepository.save(machine)
 
 
 def update_machine(machine_id: int, data: dict) -> Machine:
-    machine = db.get_or_404(Machine, machine_id)
+    machine = MachineRepository.get_by_id(machine_id)
     for field in ('statut', 'notes', 'modele_id', 'date_entree'):
         if field in data:
             setattr(machine, field, data[field])
-    db.session.commit()
-    return machine
+    return MachineRepository.save(machine)
 
 
-def delete_machine(machine_id: int):
-    machine = db.get_or_404(Machine, machine_id)
-    db.session.delete(machine)
-    db.session.commit()
+def delete_machine(machine_id: int) -> None:
+    machine = MachineRepository.get_by_id(machine_id)
+    MachineRepository.delete(machine)
 
 
 def get_machine_info(machine_id: int) -> dict:
     """Retourne les infos enrichies (specs, vue éclatée) via le registre handlers."""
-    machine = db.get_or_404(Machine, machine_id)
+    machine = MachineRepository.get_by_id(machine_id)
     info = None
     if machine.modele:
         info = resolve_machine_info(
