@@ -47,7 +47,6 @@ def update_reparation(rep_id):
     rep  = svc.modifier_reparation(rep_id, data)
     return jsonify(reparation_schema.dump(rep)), 200
 
-
 @reparations_bp.route('/reparations/<int:rep_id>', methods=['DELETE'])
 @jwt_required()
 def delete_reparation(rep_id):
