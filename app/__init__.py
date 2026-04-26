@@ -2,10 +2,11 @@ from flask import Flask, jsonify
 from marshmallow import ValidationError
 from flask_cors import CORS
 from flask_jwt_extended.exceptions import JWTExtendedException
+
+from app.utils.responses import api_error
 from .config import DevConfig, ProdConfig
 import os
 from .extensions import jwt, limiter, db, migrate, ma
-from .core.errors import api_error
 from dotenv import load_dotenv
 
 
