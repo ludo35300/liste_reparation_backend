@@ -1,7 +1,7 @@
 import io
 import base64
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from PIL import Image
 
@@ -51,7 +51,7 @@ _CACHE_TTL = timedelta(minutes=5)
 
 
 def _get_cached(key: str, loader):
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     if key not in _cache or (now - _cache[key]["ts"]) > _CACHE_TTL:
         _cache[key] = {"data": loader(), "ts": now}
     return _cache[key]["data"]
@@ -155,7 +155,7 @@ def analyser_fiche(file_bytes: bytes, fallback_user_id: int | None = None) -> di
             refs_connues=", ".join(refs_connues[:80])
         )
 
-        raw = mistral.analyser_image_json(b64, prompt)
+        raw = mistral.analyser_image_json(b64, ", ".join(refs_connues[:80]), prompt)
         if not raw or "erreur" in raw:
             return {"erreur": raw.get("erreur", "Réponse Mistral invalide"),
                     "pieces": [], "nb_pieces_total": 0}
