@@ -2,7 +2,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from .service import analyser_fiche
-from app.core.errors import api_error
+from app.utils.responses import api_error
 
 ocr_bp = Blueprint('ocr', __name__)
 

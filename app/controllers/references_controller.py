@@ -6,7 +6,7 @@ from app.schemas import (
     MarqueSchema, ModeleSchema, ModeleSimpleSchema, PieceRefSchema
 )
 from app.services import references_service as svc
-from app.core.errors import api_error
+from app.utils.responses import api_error
 
 references_bp = Blueprint('references', __name__)
 

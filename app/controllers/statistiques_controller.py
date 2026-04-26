@@ -2,7 +2,7 @@
 from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required
 from app.services import statistiques_service as svc
-from app.core.errors import api_error
+from app.utils.responses import api_error
 
 stats_bp = Blueprint('stats', __name__)
 
