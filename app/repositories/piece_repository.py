@@ -46,3 +46,11 @@ class PieceRefRepository:
     def delete(piece: PieceRef) -> None:
         db.session.delete(piece)
         db.session.commit()
+
+    @staticmethod
+    def add(piece: PieceRef) -> None:
+        db.session.add(piece)
+
+    @staticmethod
+    def flush() -> None:
+        db.session.flush()

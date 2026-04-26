@@ -54,3 +54,11 @@ class ReparationRepository:
     def delete(reparation: Reparation) -> None:
         db.session.delete(reparation)
         db.session.commit()
+
+    @staticmethod
+    def add(reparation: Reparation) -> None:
+        db.session.add(reparation)
+
+    @staticmethod
+    def flush() -> None:
+        db.session.flush()

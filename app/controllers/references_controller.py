@@ -101,6 +101,12 @@ def add_piece(modele_id, piece_id):
 def remove_piece(modele_id, piece_id):
     return jsonify(modele_schema.dump(svc.remove_piece_from_modele(modele_id, piece_id))), 200
 
+@references_bp.route('/suggestions/modele', methods=['GET'])
+@jwt_required()
+def suggest_modele():
+    q = request.args.get('q', '').strip().upper()
+    return jsonify([{'id': modele.id, 'label': modele.label} for modele in svc.suggest_modeles(q)]), 200
+
 # ── PIECES ────────────────────────────────────────────────────
 @references_bp.route('/pieces', methods=['GET'])
 @jwt_required()
@@ -124,3 +130,9 @@ def create_piece():
 def delete_piece(piece_id):
     svc.delete_piece(piece_id)
     return jsonify({'message': 'Pièce supprimée'}), 200
+
+@references_bp.route('/suggestions/piece-ref', methods=['GET'])
+@jwt_required()
+def suggest_piece_ref():
+    q = request.args.get('q', '').strip().upper()
+    return jsonify([{'ref_piece': piece.ref_piece, 'designation': piece.designation} for piece in svc.suggest_piece_refs(q)]), 200
