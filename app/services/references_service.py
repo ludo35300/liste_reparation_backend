@@ -26,7 +26,6 @@ def update_marque_logo(marque_id: int, url_logo: str) -> Marque:
     marque.url_logo = url_logo
     return MarqueRepository.save(marque)
 
-
 # ── Modeles ────────────────────────────────────────────
 def get_all_modeles(marque_id: int = None) -> list[Modele]:
     return ModeleRepository.get_all(marque_id=marque_id)
@@ -46,6 +45,8 @@ def delete_modele(modele_id: int) -> None:
     modele = ModeleRepository.get_by_id(modele_id)
     ModeleRepository.delete(modele)
 
+def suggest_modeles(query: str):
+    return ModeleRepository.search(query)
 
 # ── PieceRef ───────────────────────────────────────────
 def get_all_pieces(marque_id: int = None) -> list[PieceRef]:
@@ -66,6 +67,8 @@ def delete_piece(piece_id: int) -> None:
     piece = PieceRefRepository.get_by_id(piece_id)
     PieceRefRepository.delete(piece)
 
+def suggest_piece_refs(query: str):
+    return PieceRefRepository.search(query)
 
 # ── Association Modele ↔ Piece ──────────────────────────
 def get_pieces_by_modele(modele_id: int) -> list[PieceRef]:

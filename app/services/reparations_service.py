@@ -21,16 +21,15 @@ def creer_reparation(data: dict) -> Reparation:
     except ValueError:
         raise ValueError(f"Format de date invalide : {date_val!r}. Attendu : YYYY-MM-DD")
 
-    technicien_id = data.get('technicien_id') or None
-
     rep = Reparation(
         machine_id=data['machine_id'],
         technicien=data.get('technicien', ''),
-        technicien_id=technicien_id,
+        technicien_id=data.get('technicien_id') or None,
         date_reparation=date_rep,
         description=data.get('description', data.get('notes', ''))
     )
-    ReparationRepository.save(rep)
+    ReparationRepository.add(rep)      # db.session.add() — pas de commit
+    ReparationRepository.flush()    # génère l'id de la réparation avant d'ajouter les pièces (nécessaire pour la relation)
 
     pieces_connues = PieceRefRepository.get_all_as_dict()
 
@@ -48,7 +47,8 @@ def creer_reparation(data: dict) -> Reparation:
                 designation=p.get('designation', designation),
                 marque_id=p.get('marque_id')
             )
-            PieceRefRepository.save(piece_obj)
+            PieceRefRepository.add(piece_obj)    # pas de commit non plus
+            PieceRefRepository.flush()           # génère piece_obj.id pour la relation avec PieceChangee
 
         if piece_obj:
             ReparationRepository.add_piece_changee(
@@ -58,8 +58,7 @@ def creer_reparation(data: dict) -> Reparation:
                     quantite=int(p.get('quantite', 1))
                 )
             )
-
-    ReparationRepository.commit()
+    ReparationRepository.commit() 
     return rep
 
 
