@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
-from app.schemas.schemas import MachineSchema
+from app.schemas.machine import MachineSchema
 from app.services import machines_service as svc
 from app.utils.responses import api_error
 

@@ -1,8 +1,8 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import get_jwt_identity, jwt_required
 
+from app.schemas.reparation import ReparationSchema
 from app.utils.responses import api_error
-from app.schemas import ReparationSchema
 from app.services import reparations_service as svc
 
 reparations_bp = Blueprint('reparations', __name__)
@@ -57,6 +57,7 @@ def delete_reparation(rep_id):
 @jwt_required()
 def get_mes_reparations():
     reparations = svc.get_mes_reparations(get_jwt_identity())
+    print(reparations)
     if reparations is None:
         return api_error('Utilisateur introuvable', 404, code='USER_NOT_FOUND')
     return jsonify(reparations_schema.dump(reparations)), 200

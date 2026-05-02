@@ -2,9 +2,9 @@ import os
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
 from werkzeug.utils import secure_filename
-from app.schemas import (
-    MarqueSchema, ModeleSchema, ModeleSimpleSchema, PieceRefSchema
-)
+from app.schemas.modele import ModeleSchema, ModeleSimpleSchema
+from app.schemas.marque import MarqueSchema
+from app.schemas.piece import PieceRefSchema
 from app.services import references_service as svc
 from app.utils.responses import api_error
 

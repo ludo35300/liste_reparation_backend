@@ -29,9 +29,9 @@ class ReparationRepository:
 
     @staticmethod
     def get_by_technicien_id(technicien_id: int) -> list[Reparation]:
+        print(f"Fetching reparations for technicien_id: {technicien_id}")
         return (
             Reparation.query
-            .filter_by(technicien_id=technicien_id)
             .order_by(Reparation.date_reparation.desc())
             .all()
         )

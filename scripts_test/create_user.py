@@ -36,15 +36,15 @@ def main():
 
     with app.app_context():
         from app.security.passwords import hash_password
-        from app.repositories.database import create_user, get_user_by_email, norm_email
+        from app.repositories.user_repository import UserRepository
 
-        email = norm_email(email)
+        email = UserRepository.norm_email(email)
 
-        if get_user_by_email(email):
+        if UserRepository.get_by_email(email):
             print(f"❌ L'email {email} est déjà utilisé.")
             sys.exit(1)
 
-        create_user(email, hash_password(password), first_name, last_name)
+        UserRepository.create(email, hash_password(password), first_name, last_name)
         print(f"✅ Utilisateur '{first_name} {last_name}' <{email}> créé avec succès.")
 
 if __name__ == '__main__':

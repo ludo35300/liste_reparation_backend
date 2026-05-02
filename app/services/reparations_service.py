@@ -87,6 +87,7 @@ def get_reparations_by_technicien_id(technicien_id: int) -> list[Reparation]:
 
 def get_mes_reparations(user_id: int):
     user = UserRepository.get_by_id(int(user_id))
+    print(f"User ID: {user_id}, User: {user}")
     if not user:
         return None
     return ReparationRepository.get_by_technicien_id(user.id)
