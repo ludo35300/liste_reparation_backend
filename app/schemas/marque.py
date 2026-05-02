@@ -2,7 +2,6 @@
 from marshmallow import Schema, fields, EXCLUDE
 from marshmallow.validate import Length
 
-
 class MarqueSchema(Schema):
     class Meta:
         unknown = EXCLUDE

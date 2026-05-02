@@ -42,14 +42,6 @@ def delete_machine(machine_id):
     svc.delete_machine(machine_id)
     return jsonify({'message': 'Machine supprimée'}), 200
 
-@machines_bp.route('/machines/serie/<string:numero_serie>', methods=['GET'])
-@jwt_required()
-def get_by_serie(numero_serie):
-    machine = svc.get_machine_by_serie(numero_serie)
-    if not machine:
-        return api_error('Machine non trouvée', 404, code='MACHINE_NOT_FOUND')
-    return jsonify(machine_schema.dump(machine)), 200
-
 @machines_bp.route('/machines/<int:machine_id>/info', methods=['GET'])
 @jwt_required()
 def get_machine_info(machine_id):

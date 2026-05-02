@@ -1,6 +1,8 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import get_jwt_identity, jwt_required
 
+from app.repositories.machine_repository import MachineRepository
+from app.repositories.reparation_repository import ReparationRepository
 from app.schemas.reparation import ReparationSchema
 from app.utils.responses import api_error
 from app.services import reparations_service as svc
@@ -28,10 +30,43 @@ def get_by_machine(machine_id):
 @reparations_bp.route('/machines/serie/<string:numero_serie>', methods=['GET'])
 @jwt_required()
 def get_by_serie(numero_serie):
-    reparations = svc.get_reparations_by_numero_serie(numero_serie)
-    if reparations is None:
+    machine = MachineRepository.get_by_serie(numero_serie)
+    if not machine:
         return api_error('Machine introuvable', 404, code='MACHINE_NOT_FOUND')
-    return jsonify(reparations_schema.dump(reparations)), 200
+
+    reparations = ReparationRepository.get_by_machine(machine.id)
+
+    # Infos enrichies (specs, vue éclatée) si disponibles
+    machine_info = None
+    if machine.modele:
+        from app.machines import resolve_machine_info
+        info = resolve_machine_info(
+            brand        = machine.modele.marque.nom if machine.modele.marque else '',
+            model        = machine.modele.nom,
+            numero_serie = machine.numero_serie,
+        )
+        if info:
+            machine_info = {
+                "brand":         info.brand,
+                "model":         info.model,
+                "description":   info.description,
+                "specs":         info.specs,
+                "exploded_view": {
+                    "label":     info.exploded_view.label,
+                    "pdf_url":   info.exploded_view.pdf_url,
+                    "image_url": getattr(info.exploded_view, 'image_url', None),
+                    "note":      info.exploded_view.note,
+                } if info.exploded_view else None,
+            }
+
+    return jsonify({
+        "found":              True,
+        "numero_serie":       machine.numero_serie,
+        "machine_type":       machine.modele.label if machine.modele else None,
+        "nombre_reparations": len(reparations),
+        "reparations":        reparations_schema.dump(reparations),
+        "machine_info":       machine_info,
+    }), 200
 
 @reparations_bp.route('/reparations', methods=['POST'])
 @jwt_required()
