@@ -1,4 +1,4 @@
-# ── Marque ────────────────────────────────────────────────────
+# app/schemas/marque.py
 from marshmallow import Schema, fields, EXCLUDE
 from marshmallow.validate import Length
 
