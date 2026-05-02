@@ -46,3 +46,9 @@ class MachineRepository:
     def delete(machine: Machine) -> None:
         db.session.delete(machine)
         db.session.commit()
+
+    @staticmethod
+    def update_statut(machine_id: int, statut: str) -> None:
+        machine = db.session.get(Machine, machine_id)
+        if machine:
+            machine.statut = statut

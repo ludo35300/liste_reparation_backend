@@ -55,6 +55,7 @@ def create_app(config=None):
     from .controllers.statistiques_controller       import stats_bp
     from .ocr.routes         import ocr_bp
     from .controllers.references_controller  import references_bp
+    from .controllers.actions_controller import actions_bp
 
     app.register_blueprint(auth_bp,        url_prefix='/api/auth')
     app.register_blueprint(user_bp,        url_prefix='/api')
@@ -63,5 +64,6 @@ def create_app(config=None):
     app.register_blueprint(stats_bp,       url_prefix='/api')
     app.register_blueprint(ocr_bp,         url_prefix='/api')
     app.register_blueprint(references_bp,  url_prefix='/api')
+    app.register_blueprint(actions_bp, url_prefix='/api')
 
     return app
