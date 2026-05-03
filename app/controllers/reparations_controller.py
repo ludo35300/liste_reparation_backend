@@ -7,6 +7,7 @@ from app.schemas.reparation import ReparationSchema
 from app.utils.exceptions import ConflictError
 from app.utils.responses import api_error
 from app.services import reparations_service as svc
+from app.utils.exceptions import MachineAlreadyInRepairError
 
 reparations_bp = Blueprint('reparations', __name__)
 reparation_schema = ReparationSchema()
@@ -75,7 +76,7 @@ def create_reparation():
     data = reparation_schema.load(request.get_json(force=True) or {})
     try:
         rep = svc.creer_reparation(data)
-    except ConflictError as e:
+    except MachineAlreadyInRepairError as e:
         return api_error(str(e), 409, code=e.code)
     return jsonify(reparation_schema.dump(rep)), 201
 

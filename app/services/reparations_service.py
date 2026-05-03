@@ -9,6 +9,8 @@ from app.repositories.piece_repository import PieceRefRepository
 from app.repositories.reparation_repository import ReparationRepository
 from app.repositories.user_repository import UserRepository
 from app.utils.fuzzy import fuzzy_piece
+from app.utils.exceptions import MachineAlreadyInRepairError
+
 
 def creer_reparation(data: dict) -> Reparation:
     date_val = data.get('date_reparation')
@@ -22,7 +24,7 @@ def creer_reparation(data: dict) -> Reparation:
     # ── GARDE : machine déjà en réparation ───────────────────────────
     machine_id = data.get('machine_id')
     if machine_id and MachineRepository.has_open_repair(machine_id):
-        raise ValueError(
+        raise MachineAlreadyInRepairError(
             "Cette machine est déjà en réparation.",
             code="MACHINE_ALREADY_IN_REPAIR"
         )
