@@ -60,5 +60,9 @@ class ReparationRepository:
         db.session.add(reparation)
 
     @staticmethod
+    def delete_piece_changee(piece: PieceChangee) -> None:
+        db.session.delete(piece)
+
+    @staticmethod
     def flush() -> None:
         db.session.flush()

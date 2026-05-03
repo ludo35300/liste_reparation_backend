@@ -61,6 +61,56 @@ def creer_reparation(data: dict) -> Reparation:
     ReparationRepository.commit() 
     return rep
 
+def modifier_reparation(rep_id: int, data: dict) -> Reparation:
+    """
+    PATCH partiel d'une réparation :
+    - Champs de base (technicien, date_reparation, description)
+    - Remplacement complet des pièces changées si 'pieces' est présent
+    """
+    rep = ReparationRepository.get_by_id(rep_id)
+
+    if 'technicien' in data:
+        rep.technicien = data['technicien']
+    if 'date_reparation' in data:
+        rep.date_reparation = data['date_reparation']
+    if 'description' in data:
+        rep.description = data['description']
+
+    if 'pieces' in data:
+        # Supprimer les anciennes pièces
+        for p in list(rep.pieces):
+            ReparationRepository.delete_piece_changee(p)
+        ReparationRepository.flush()
+
+        pieces_connues = PieceRefRepository.get_all_as_dict()
+
+        for p in data['pieces']:
+            if not p.get('quantite', 0):
+                continue
+            ref_brute = p.get('ref_piece', '').strip().upper()
+            ref_corrigee, designation, _ = fuzzy_piece(ref_brute, pieces_connues, cutoff=0.80)
+
+            piece_obj = PieceRefRepository.get_by_ref(ref_corrigee)
+            if not piece_obj and p.get('is_new'):
+                piece_obj = PieceRef(
+                    ref_piece=ref_corrigee,
+                    designation=p.get('designation', designation),
+                    marque_id=p.get('marque_id')
+                )
+                PieceRefRepository.add(piece_obj)
+                PieceRefRepository.flush()
+
+            if piece_obj:
+                ReparationRepository.add_piece_changee(
+                    PieceChangee(
+                        reparation_id=rep.id,
+                        piece_ref_id=piece_obj.id,
+                        quantite=int(p.get('quantite', 1))
+                    )
+                )
+
+    ReparationRepository.commit()
+    return rep
 
 def get_all_reparations() -> list[Reparation]:
     return ReparationRepository.get_all()
