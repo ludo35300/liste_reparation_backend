@@ -62,8 +62,6 @@ def create_piece(ref_piece: str, designation: str, marque_id: int) -> PieceRef:
         designation = designation,
         marque_id   = marque_id,
     )
-
-    db.session.commit()
     return PieceRefRepository.save(piece)
 
 def delete_piece(piece_id: int) -> None:

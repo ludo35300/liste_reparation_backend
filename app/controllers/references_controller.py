@@ -7,6 +7,7 @@ from app.schemas.marque import MarqueSchema
 from app.schemas.piece import PieceRefSchema
 from app.services import references_service as svc
 from app.utils.responses import api_error
+from app.extensions import db
 
 references_bp = Blueprint('references', __name__)
 
@@ -126,8 +127,9 @@ def create_piece():
     piece = svc.create_piece(
         data['ref_piece'],
         data.get('designation', ''),
-        data.get('marque_id')   # None si absent
+        data.get('marque_id')
     )
+    db.session.commit()
     return jsonify(piece_schema.dump(piece)), 201
     
 @references_bp.route('/pieces/<int:piece_id>', methods=['DELETE'])

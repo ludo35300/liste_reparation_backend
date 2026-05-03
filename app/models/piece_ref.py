@@ -9,7 +9,7 @@ class PieceRef(db.Model):
     designation = db.Column(db.String(200), nullable=False, default='')
     marque_id   = db.Column(db.Integer,
                             db.ForeignKey('marques.id', ondelete='CASCADE'),
-                            nullable=True, index=True)
+                            nullable=False, index=True)
 
     marque   = db.relationship('Marque',  back_populates='pieces')
     modeles  = db.relationship('Modele',  secondary='modele_piece_refs',
