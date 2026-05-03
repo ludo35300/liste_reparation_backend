@@ -9,6 +9,7 @@ from app.repositories.piece_repository import PieceRefRepository
 from app.repositories.reparation_repository import ReparationRepository
 from app.repositories.user_repository import UserRepository
 from app.utils.fuzzy import fuzzy_piece
+from app.utils.exceptions import MachineAlreadyInRepairError
 
 
 def creer_reparation(data: dict) -> Reparation:
@@ -20,7 +21,18 @@ def creer_reparation(data: dict) -> Reparation:
             else date_type.fromisoformat(str(date_val).strip())
     except ValueError:
         raise ValueError(f"Format de date invalide : {date_val!r}. Attendu : YYYY-MM-DD")
-
+    # ── GARDE : machine déjà en réparation ───────────────────────────
+    machine_id = data.get('machine_id')
+    if machine_id:
+        reparations = ReparationRepository.get_by_machine(machine_id)
+        if len(reparations) > 0:
+            # Vérifie si la dernière réparation est encore ouverte (pas de date_cloture)
+            last = reparations[-1]
+            if not getattr(last, 'date_cloture', None):
+                raise MachineAlreadyInRepairError(
+                    "Cette machine est déjà en réparation.",
+                    code="MACHINE_ALREADY_IN_REPAIR"
+                )
     rep = Reparation(
         machine_id=data['machine_id'],
         technicien=data.get('technicien', ''),
@@ -32,6 +44,10 @@ def creer_reparation(data: dict) -> Reparation:
     ReparationRepository.flush()    # génère l'id de la réparation avant d'ajouter les pièces (nécessaire pour la relation)
 
     pieces_connues = PieceRefRepository.get_all_as_dict()
+
+    # ✅ Récupérer la machine UNE FOIS ici (utilisée pour marque_id + statut final)
+    machine = MachineRepository.get_by_id(data['machine_id'])
+    marque_id = machine.modele.marque_id if machine and machine.modele else None
 
     for p in data.get('pieces', []):
         if not p.get('quantite', 0):
@@ -45,7 +61,7 @@ def creer_reparation(data: dict) -> Reparation:
             piece_obj = PieceRef(
                 ref_piece=ref_corrigee,
                 designation=p.get('designation', designation),
-                marque_id=p.get('marque_id')
+                marque_id=marque_id
             )
             PieceRefRepository.add(piece_obj)    # pas de commit non plus
             PieceRefRepository.flush()           # génère piece_obj.id pour la relation avec PieceChangee
@@ -59,20 +75,71 @@ def creer_reparation(data: dict) -> Reparation:
                 )
             )
     ReparationRepository.commit() 
+    # Mettre la machine en réparation
+    machine.statut = 'en_reparation'
+    MachineRepository.save(machine)
+
     return rep
 
+def modifier_reparation(rep_id: int, data: dict) -> Reparation:
+    """
+    PATCH partiel d'une réparation :
+    - Champs de base (technicien, date_reparation, description)
+    - Remplacement complet des pièces changées si 'pieces' est présent
+    """
+    rep = ReparationRepository.get_by_id(rep_id)
+
+    if 'technicien' in data:
+        rep.technicien = data['technicien']
+    if 'date_reparation' in data:
+        rep.date_reparation = data['date_reparation']
+    if 'description' in data:
+        rep.description = data['description']
+
+    if 'pieces' in data:
+        # Supprimer les anciennes pièces
+        for p in list(rep.pieces):
+            ReparationRepository.delete_piece_changee(p)
+        ReparationRepository.flush()
+
+        pieces_connues = PieceRefRepository.get_all_as_dict()
+
+        for p in data['pieces']:
+            if not p.get('quantite', 0):
+                continue
+            ref_brute = p.get('ref_piece', '').strip().upper()
+            ref_corrigee, designation, _ = fuzzy_piece(ref_brute, pieces_connues, cutoff=0.80)
+
+            piece_obj = PieceRefRepository.get_by_ref(ref_corrigee)
+            if not piece_obj and p.get('is_new'):
+                piece_obj = PieceRef(
+                    ref_piece=ref_corrigee,
+                    designation=p.get('designation', designation),
+                    marque_id=p.get('marque_id')
+                )
+                PieceRefRepository.add(piece_obj)
+                PieceRefRepository.flush()
+
+            if piece_obj:
+                ReparationRepository.add_piece_changee(
+                    PieceChangee(
+                        reparation_id=rep.id,
+                        piece_ref_id=piece_obj.id,
+                        quantite=int(p.get('quantite', 1))
+                    )
+                )
+
+    ReparationRepository.commit()
+    return rep
 
 def get_all_reparations() -> list[Reparation]:
     return ReparationRepository.get_all()
 
-
 def get_reparation_by_id(rep_id: int) -> Reparation:
     return ReparationRepository.get_by_id(rep_id)
 
-
 def get_reparations_by_machine(machine_id: int) -> list[Reparation]:
     return ReparationRepository.get_by_machine(machine_id)
-
 
 def get_reparations_by_numero_serie(numero_serie: str):
     machine = MachineRepository.get_by_serie(numero_serie)
@@ -80,25 +147,21 @@ def get_reparations_by_numero_serie(numero_serie: str):
         return None
     return ReparationRepository.get_by_machine(machine.id)
 
-
 def get_reparations_by_technicien_id(technicien_id: int) -> list[Reparation]:
     return ReparationRepository.get_by_technicien_id(technicien_id)
 
-
 def get_mes_reparations(user_id: int):
     user = UserRepository.get_by_id(int(user_id))
+    print(f"User ID: {user_id}, User: {user}")
     if not user:
         return None
     return ReparationRepository.get_by_technicien_id(user.id)
 
-
 def suggest_piece_refs(query: str):
     return PieceRefRepository.search(query)
 
-
 def suggest_modeles(query: str):
     return ModeleRepository.search(query)
-
 
 def delete_reparation(rep_id: int) -> None:
     rep = ReparationRepository.get_by_id(rep_id)

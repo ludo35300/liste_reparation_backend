@@ -2,11 +2,12 @@ import os
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
 from werkzeug.utils import secure_filename
-from app.schemas import (
-    MarqueSchema, ModeleSchema, ModeleSimpleSchema, PieceRefSchema
-)
+from app.schemas.modele import ModeleSchema, ModeleSimpleSchema
+from app.schemas.marque import MarqueSchema
+from app.schemas.piece import PieceRefSchema
 from app.services import references_service as svc
 from app.utils.responses import api_error
+from app.extensions import db
 
 references_bp = Blueprint('references', __name__)
 
@@ -123,8 +124,14 @@ def get_piece(piece_id):
 @jwt_required()
 def create_piece():
     data = piece_schema.load(request.get_json(force=True) or {})
-    return jsonify(piece_schema.dump(svc.create_piece(data['ref_piece'], data.get('designation', ''), data['marque_id']))), 201
-
+    piece = svc.create_piece(
+        data['ref_piece'],
+        data.get('designation', ''),
+        data.get('marque_id')
+    )
+    db.session.commit()
+    return jsonify(piece_schema.dump(piece)), 201
+    
 @references_bp.route('/pieces/<int:piece_id>', methods=['DELETE'])
 @jwt_required()
 def delete_piece(piece_id):

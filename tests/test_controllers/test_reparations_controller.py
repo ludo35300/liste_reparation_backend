@@ -20,11 +20,10 @@ def test_create_reparation_date_invalide(client, auth_headers):
 
 
 def test_get_by_serie_machine_introuvable(client, auth_headers):
-    with patch('app.services.reparations_service.MachineRepository.get_by_serie', return_value=None):
+    with patch('app.controllers.reparations_controller.MachineRepository.get_by_serie', return_value=None):
         resp = client.get('/api/machines/serie/INCONNU', headers=auth_headers)
     assert resp.status_code == 404
-    data = resp.get_json()
-    assert data['code'] == 'MACHINE_NOT_FOUND'
+    assert resp.get_json()['code'] == 'MACHINE_NOT_FOUND'
 
 
 def test_get_mes_reparations_user_inconnu(client, auth_headers):

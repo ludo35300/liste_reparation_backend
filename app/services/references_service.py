@@ -4,6 +4,7 @@ from app.models.piece_ref import PieceRef
 from app.repositories.marque_repository  import MarqueRepository
 from app.repositories.modele_repository  import ModeleRepository
 from app.repositories.piece_repository   import PieceRefRepository
+from tests.conftest import db
 
 
 # ── Marques ──────────────────────────────────────────────

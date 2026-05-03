@@ -46,3 +46,16 @@ class MachineRepository:
     def delete(machine: Machine) -> None:
         db.session.delete(machine)
         db.session.commit()
+
+    @staticmethod
+    def update_statut(machine_id: int, statut: str) -> None:
+        machine = db.session.get(Machine, machine_id)
+        if machine:
+            machine.statut = statut
+
+    @staticmethod
+    def has_open_repair(machine_id: int) -> bool:
+        """Retourne True si la machine a le statut 'en_reparation'."""
+        from app.models.machine import Machine
+        machine = db.session.get(Machine, machine_id)
+        return machine is not None and machine.statut == 'en_reparation'

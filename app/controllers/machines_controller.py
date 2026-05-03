@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
-from app.schemas.schemas import MachineSchema
+from app.schemas.machine import MachineSchema
 from app.services import machines_service as svc
 from app.utils.responses import api_error
 
@@ -41,14 +41,6 @@ def update_machine(machine_id):
 def delete_machine(machine_id):
     svc.delete_machine(machine_id)
     return jsonify({'message': 'Machine supprimée'}), 200
-
-@machines_bp.route('/machines/serie/<string:numero_serie>', methods=['GET'])
-@jwt_required()
-def get_by_serie(numero_serie):
-    machine = svc.get_machine_by_serie(numero_serie)
-    if not machine:
-        return api_error('Machine non trouvée', 404, code='MACHINE_NOT_FOUND')
-    return jsonify(machine_schema.dump(machine)), 200
 
 @machines_bp.route('/machines/<int:machine_id>/info', methods=['GET'])
 @jwt_required()

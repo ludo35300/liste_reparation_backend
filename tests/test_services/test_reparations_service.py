@@ -10,9 +10,10 @@ def _mock_save(obj):
 
 
 def test_creer_reparation_ok():
-    with patch('app.services.reparations_service.ReparationRepository.save', side_effect=_mock_save), \
-         patch('app.services.reparations_service.PieceRefRepository.get_all_as_dict', return_value={}), \
+    with patch('app.services.reparations_service.ReparationRepository.add'), \
+         patch('app.services.reparations_service.ReparationRepository.flush'), \
          patch('app.services.reparations_service.ReparationRepository.commit'), \
+         patch('app.services.reparations_service.PieceRefRepository.get_all_as_dict', return_value={}), \
          patch('app.services.reparations_service.ReparationRepository.add_piece_changee'):
         rep = svc.creer_reparation({
             'machine_id': 1,
