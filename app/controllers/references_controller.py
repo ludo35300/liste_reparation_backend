@@ -123,8 +123,13 @@ def get_piece(piece_id):
 @jwt_required()
 def create_piece():
     data = piece_schema.load(request.get_json(force=True) or {})
-    return jsonify(piece_schema.dump(svc.create_piece(data['ref_piece'], data.get('designation', ''), data['marque_id']))), 201
-
+    piece = svc.create_piece(
+        data['ref_piece'],
+        data.get('designation', ''),
+        data.get('marque_id')   # None si absent
+    )
+    return jsonify(piece_schema.dump(piece)), 201
+    
 @references_bp.route('/pieces/<int:piece_id>', methods=['DELETE'])
 @jwt_required()
 def delete_piece(piece_id):

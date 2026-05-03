@@ -4,6 +4,7 @@ from app.models.piece_ref import PieceRef
 from app.repositories.marque_repository  import MarqueRepository
 from app.repositories.modele_repository  import ModeleRepository
 from app.repositories.piece_repository   import PieceRefRepository
+from tests.conftest import db
 
 
 # ── Marques ──────────────────────────────────────────────
@@ -61,6 +62,8 @@ def create_piece(ref_piece: str, designation: str, marque_id: int) -> PieceRef:
         designation = designation,
         marque_id   = marque_id,
     )
+
+    db.session.commit()
     return PieceRefRepository.save(piece)
 
 def delete_piece(piece_id: int) -> None:

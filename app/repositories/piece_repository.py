@@ -39,7 +39,7 @@ class PieceRefRepository:
     @staticmethod
     def save(piece: PieceRef) -> PieceRef:
         db.session.add(piece)
-        db.session.flush()
+        db.session.commit()
         return piece
 
     @staticmethod
