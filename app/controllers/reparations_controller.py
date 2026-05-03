@@ -4,6 +4,7 @@ from flask_jwt_extended import get_jwt_identity, jwt_required
 from app.repositories.machine_repository import MachineRepository
 from app.repositories.reparation_repository import ReparationRepository
 from app.schemas.reparation import ReparationSchema
+from app.utils.exceptions import ConflictError
 from app.utils.responses import api_error
 from app.services import reparations_service as svc
 
@@ -72,7 +73,10 @@ def get_by_serie(numero_serie):
 @jwt_required()
 def create_reparation():
     data = reparation_schema.load(request.get_json(force=True) or {})
-    rep  = svc.creer_reparation(data)
+    try:
+        rep = svc.creer_reparation(data)
+    except ConflictError as e:
+        return api_error(str(e), 409, code=e.code)
     return jsonify(reparation_schema.dump(rep)), 201
 
 @reparations_bp.route('/reparations/<int:rep_id>', methods=['PATCH'])

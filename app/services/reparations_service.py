@@ -10,7 +10,6 @@ from app.repositories.reparation_repository import ReparationRepository
 from app.repositories.user_repository import UserRepository
 from app.utils.fuzzy import fuzzy_piece
 
-
 def creer_reparation(data: dict) -> Reparation:
     date_val = data.get('date_reparation')
     if not date_val:
@@ -20,7 +19,13 @@ def creer_reparation(data: dict) -> Reparation:
             else date_type.fromisoformat(str(date_val).strip())
     except ValueError:
         raise ValueError(f"Format de date invalide : {date_val!r}. Attendu : YYYY-MM-DD")
-
+    # ── GARDE : machine déjà en réparation ───────────────────────────
+    machine_id = data.get('machine_id')
+    if machine_id and MachineRepository.has_open_repair(machine_id):
+        raise ValueError(
+            "Cette machine est déjà en réparation.",
+            code="MACHINE_ALREADY_IN_REPAIR"
+        )
     rep = Reparation(
         machine_id=data['machine_id'],
         technicien=data.get('technicien', ''),
@@ -115,14 +120,11 @@ def modifier_reparation(rep_id: int, data: dict) -> Reparation:
 def get_all_reparations() -> list[Reparation]:
     return ReparationRepository.get_all()
 
-
 def get_reparation_by_id(rep_id: int) -> Reparation:
     return ReparationRepository.get_by_id(rep_id)
 
-
 def get_reparations_by_machine(machine_id: int) -> list[Reparation]:
     return ReparationRepository.get_by_machine(machine_id)
-
 
 def get_reparations_by_numero_serie(numero_serie: str):
     machine = MachineRepository.get_by_serie(numero_serie)
@@ -130,10 +132,8 @@ def get_reparations_by_numero_serie(numero_serie: str):
         return None
     return ReparationRepository.get_by_machine(machine.id)
 
-
 def get_reparations_by_technicien_id(technicien_id: int) -> list[Reparation]:
     return ReparationRepository.get_by_technicien_id(technicien_id)
-
 
 def get_mes_reparations(user_id: int):
     user = UserRepository.get_by_id(int(user_id))
@@ -142,14 +142,11 @@ def get_mes_reparations(user_id: int):
         return None
     return ReparationRepository.get_by_technicien_id(user.id)
 
-
 def suggest_piece_refs(query: str):
     return PieceRefRepository.search(query)
 
-
 def suggest_modeles(query: str):
     return ModeleRepository.search(query)
-
 
 def delete_reparation(rep_id: int) -> None:
     rep = ReparationRepository.get_by_id(rep_id)
