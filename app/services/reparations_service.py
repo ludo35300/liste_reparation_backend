@@ -23,11 +23,16 @@ def creer_reparation(data: dict) -> Reparation:
         raise ValueError(f"Format de date invalide : {date_val!r}. Attendu : YYYY-MM-DD")
     # ── GARDE : machine déjà en réparation ───────────────────────────
     machine_id = data.get('machine_id')
-    if machine_id and MachineRepository.has_open_repair(machine_id):
-        raise MachineAlreadyInRepairError(
-            "Cette machine est déjà en réparation.",
-            code="MACHINE_ALREADY_IN_REPAIR"
-        )
+    if machine_id:
+        reparations = ReparationRepository.get_by_machine(machine_id)
+        if len(reparations) > 0:
+            # Vérifie si la dernière réparation est encore ouverte (pas de date_cloture)
+            last = reparations[-1]
+            if not getattr(last, 'date_cloture', None):
+                raise MachineAlreadyInRepairError(
+                    "Cette machine est déjà en réparation.",
+                    code="MACHINE_ALREADY_IN_REPAIR"
+                )
     rep = Reparation(
         machine_id=data['machine_id'],
         technicien=data.get('technicien', ''),

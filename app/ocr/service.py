@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, timezone
 
 from PIL import Image
 
+from app.extensions      import db
 from app.models.modele   import Modele
 from app.models.piece_ref import PieceRef
 from app.models.user     import User
@@ -105,6 +106,21 @@ def _deduire_machine_depuis_pieces(pieces: list, labels_machines: list) -> str:
     return ""
 
 
+def _resoudre_modele(label_corrige: str) -> tuple[int | None, int | None]:
+    if not label_corrige:
+        return None, None
+
+    # Modele.label est une @property Python = f"{type_machine} {marque.nom} {nom}"
+    # On ne peut pas l'utiliser dans une requête SQL → on filtre sur les colonnes réelles
+    label = label_corrige.strip().upper()
+
+    modeles = Modele.query.all()
+    for modele in modeles:
+        if modele.label and modele.label.strip().upper() == label:
+            return modele.id, modele.marque_id
+
+    return None, None
+
 def _compresser_image(file_bytes: bytes, qualite: int = 85, max_dim: int = 1920) -> str:
     image = Image.open(io.BytesIO(file_bytes))
     if max(image.size) > max_dim:
@@ -133,7 +149,6 @@ def _resoudre_technicien(nom_brut: str, techniciens: list,
         if matches:
             return matches[0]
     if fallback_user_id:
-        from app.extensions import db
         user = db.session.get(User, fallback_user_id)
         if user:
             return user.first_name.upper()
@@ -145,17 +160,13 @@ def analyser_fiche(file_bytes: bytes, fallback_user_id: int | None = None) -> di
         b64 = _compresser_image(file_bytes)
         del file_bytes
 
-        pieces_dict   = _pieces_connues()
-        labels_mach   = _labels_machines()
-        techniciens   = _prenoms_techniciens()
-        refs_connues  = list(pieces_dict.keys())
+        pieces_dict  = _pieces_connues()
+        labels_mach  = _labels_machines()
+        techniciens  = _prenoms_techniciens()
+        refs_connues = list(pieces_dict.keys())
 
-        prompt = PROMPT_JSON.format(
-            texte_ocr="(image fournie directement)",
-            refs_connues=", ".join(refs_connues[:80])
-        )
+        raw = mistral.analyser_image_json(b64, ", ".join(refs_connues[:80]), PROMPT_JSON)
 
-        raw = mistral.analyser_image_json(b64, ", ".join(refs_connues[:80]), prompt)
         if not raw or "erreur" in raw:
             return {"erreur": raw.get("erreur", "Réponse Mistral invalide"),
                     "pieces": [], "nb_pieces_total": 0}
@@ -170,15 +181,18 @@ def analyser_fiche(file_bytes: bytes, fallback_user_id: int | None = None) -> di
             ]
             machine_corrigee = _deduire_machine_depuis_pieces(pieces_brutes, labels_mach)
 
+        # ── Résolution modele_id / marque_id ──────────────────
+        modele_id, marque_id = _resoudre_modele(machine_corrigee)
+
         # ── Résolution technicien ─────────────────────────────
-        nom_brut    = raw.get("nom", "").strip()
-        technicien  = _resoudre_technicien(nom_brut, techniciens, fallback_user_id)
+        nom_brut   = raw.get("nom", "").strip()
+        technicien = _resoudre_technicien(nom_brut, techniciens, fallback_user_id)
 
         # ── Résolution pièces ─────────────────────────────────
         pieces_out = []
         for p in raw.get("pieces", []):
-            ref_brute   = normaliser_ref(p.get("ref", ""))
-            quantite    = _safe_int(p.get("quantite", 1), default=1)
+            ref_brute = normaliser_ref(p.get("ref", ""))
+            quantite  = _safe_int(p.get("quantite", 1), default=1)
             if not ref_brute or quantite < 1:
                 continue
             ref_corrigee, designation, score = fuzzy_piece(
@@ -199,7 +213,9 @@ def analyser_fiche(file_bytes: bytes, fallback_user_id: int | None = None) -> di
             "date":            date_norm,
             "numero_serie":    raw.get("numero", "").strip(),
             "machine_type":    machine_corrigee,
-            "is_new_machine":  machine_corrigee not in labels_mach,
+            "modele_id":       modele_id,
+            "marque_id":       marque_id,
+            "is_new_machine":  modele_id is None,
             "pieces":          pieces_out,
             "nb_pieces_total": sum(p["quantite"] for p in pieces_out),
         }
