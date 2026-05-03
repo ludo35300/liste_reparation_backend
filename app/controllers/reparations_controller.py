@@ -3,6 +3,7 @@ from flask_jwt_extended import get_jwt_identity, jwt_required
 
 from app.repositories.machine_repository import MachineRepository
 from app.repositories.reparation_repository import ReparationRepository
+from app.schemas.machine import MachineSchema
 from app.schemas.reparation import ReparationSchema
 from app.utils.exceptions import ConflictError
 from app.utils.responses import api_error
@@ -10,6 +11,7 @@ from app.services import reparations_service as svc
 from app.utils.exceptions import MachineAlreadyInRepairError
 
 reparations_bp = Blueprint('reparations', __name__)
+machine_schema = MachineSchema()
 reparation_schema = ReparationSchema()
 reparations_schema = ReparationSchema(many=True)
 
@@ -64,6 +66,7 @@ def get_by_serie(numero_serie):
     return jsonify({
         "found":              True,
         "numero_serie":       machine.numero_serie,
+        "machine":            machine_schema.dump(machine), 
         "machine_type":       machine.modele.label if machine.modele else None,
         "nombre_reparations": len(reparations),
         "reparations":        reparations_schema.dump(reparations),

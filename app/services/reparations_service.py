@@ -40,6 +40,10 @@ def creer_reparation(data: dict) -> Reparation:
 
     pieces_connues = PieceRefRepository.get_all_as_dict()
 
+    # ✅ Récupérer la machine UNE FOIS ici (utilisée pour marque_id + statut final)
+    machine = MachineRepository.get_by_id(data['machine_id'])
+    marque_id = machine.modele.marque_id if machine and machine.modele else None
+
     for p in data.get('pieces', []):
         if not p.get('quantite', 0):
             continue
@@ -52,7 +56,7 @@ def creer_reparation(data: dict) -> Reparation:
             piece_obj = PieceRef(
                 ref_piece=ref_corrigee,
                 designation=p.get('designation', designation),
-                marque_id=p.get('marque_id')
+                marque_id=marque_id
             )
             PieceRefRepository.add(piece_obj)    # pas de commit non plus
             PieceRefRepository.flush()           # génère piece_obj.id pour la relation avec PieceChangee
@@ -66,6 +70,10 @@ def creer_reparation(data: dict) -> Reparation:
                 )
             )
     ReparationRepository.commit() 
+    # Mettre la machine en réparation
+    machine.statut = 'en_reparation'
+    MachineRepository.save(machine)
+
     return rep
 
 def modifier_reparation(rep_id: int, data: dict) -> Reparation:
