@@ -151,8 +151,14 @@ def get_reparations_by_technicien_id(technicien_id: int) -> list[Reparation]:
     return ReparationRepository.get_by_technicien_id(technicien_id)
 
 def get_mes_reparations(user_id: int):
-    user = UserRepository.get_by_id(int(user_id))
-    print(f"User ID: {user_id}, User: {user}")
+    try:
+        uid = int(user_id)
+        user = UserRepository.get_by_id(uid)
+    except (ValueError, TypeError):
+        # identity est un email ou username
+        user = UserRepository.get_by_email(str(user_id))
+
+    print(f"JWT identity: {user_id!r} → user: {user}")
     if not user:
         return None
     return ReparationRepository.get_by_technicien_id(user.id)
