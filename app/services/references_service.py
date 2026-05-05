@@ -86,3 +86,7 @@ def remove_piece_from_modele(modele_id: int, piece_id: int) -> Modele:
     piece  = PieceRefRepository.get_by_id(piece_id)
     ModeleRepository.remove_piece(modele, piece)
     return modele
+
+def update_piece(piece_id: int, ref_piece: str, designation: str) -> PieceRef:
+    piece = PieceRefRepository.get_by_id(piece_id)
+    return PieceRefRepository.update(piece, ref_piece, designation)
