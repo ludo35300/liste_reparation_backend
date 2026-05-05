@@ -4,7 +4,7 @@ from flask_jwt_extended import jwt_required
 from werkzeug.utils import secure_filename
 from app.schemas.modele import ModeleSchema, ModeleSimpleSchema
 from app.schemas.marque import MarqueSchema
-from app.schemas.piece import PieceRefSchema
+from app.schemas.piece import PieceRefSchema, PieceRefUpdateSchema
 from app.services import references_service as svc
 from app.utils.responses import api_error
 from app.extensions import db
@@ -17,6 +17,7 @@ modele_schema   = ModeleSchema()
 modeles_schema  = ModeleSimpleSchema(many=True)
 piece_schema    = PieceRefSchema()
 pieces_schema   = PieceRefSchema(many=True)
+piece_update_schema = PieceRefUpdateSchema()
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp', 'svg'}
 
@@ -131,7 +132,14 @@ def create_piece():
     )
     db.session.commit()
     return jsonify(piece_schema.dump(piece)), 201
-    
+
+@references_bp.route('/pieces/<int:piece_id>', methods=['PUT'])
+@jwt_required()
+def update_piece(piece_id):
+    data  = piece_update_schema.load(request.get_json(force=True) or {})
+    piece = svc.update_piece(piece_id, data['ref_piece'], data['designation'])
+    return jsonify(piece_schema.dump(piece)), 200
+ 
 @references_bp.route('/pieces/<int:piece_id>', methods=['DELETE'])
 @jwt_required()
 def delete_piece(piece_id):

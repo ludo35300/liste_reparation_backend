@@ -10,6 +10,14 @@ class PieceRefSchema(Schema):
     ref_piece   = fields.Str(required=True, validate=Length(min=1, max=100))
     designation = fields.Str(load_default='', validate=Length(max=200))
     marque_id   = fields.Int(required=True, load_only=True)
+    
+# ── PieceRefUpdate ──────────────────────────────────────────────
+class PieceRefUpdateSchema(Schema):
+    class Meta:
+        unknown = EXCLUDE
+
+    ref_piece   = fields.Str(required=True, validate=Length(min=1, max=100))
+    designation = fields.Str(load_default='', validate=Length(max=200))
 
 # ── PieceChangee ──────────────────────────────────────────────
 class PieceChangeeSchema(Schema):

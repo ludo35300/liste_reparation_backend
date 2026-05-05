@@ -54,3 +54,10 @@ class PieceRefRepository:
     @staticmethod
     def flush() -> None:
         db.session.flush()
+
+    @staticmethod
+    def update(piece: PieceRef, ref_piece: str, designation: str) -> PieceRef:
+        piece.ref_piece   = ref_piece.strip().upper()
+        piece.designation = designation.strip()
+        db.session.commit()
+        return piece
