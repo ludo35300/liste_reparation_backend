@@ -100,7 +100,8 @@ def delete_reparation(rep_id):
 @jwt_required()
 def get_mes_reparations():
     reparations = svc.get_mes_reparations(get_jwt_identity())
-    print(reparations)
+    identity = get_jwt_identity()
+    print(f"JWT identity: {identity!r}") 
     if reparations is None:
         return api_error('Utilisateur introuvable', 404, code='USER_NOT_FOUND')
     return jsonify(reparations_schema.dump(reparations)), 200
