@@ -77,6 +77,7 @@ def get_by_serie(numero_serie):
 @jwt_required()
 def create_reparation():
     data = reparation_schema.load(request.get_json(force=True) or {})
+    print(data)
     try:
         rep = svc.creer_reparation(data)
     except MachineAlreadyInRepairError as e:

@@ -13,7 +13,7 @@ class ReparationSchema(Schema):
     machine_id      = fields.Int(required=True)
     machine         = fields.Nested(MachineSchema, dump_only=True)
     technicien      = fields.Str(load_default='', validate=Length(max=100))
-    technicien_id   = fields.Int(dump_only=True, allow_none=True)
+    technicien_id   = fields.Int(load_default=None, allow_none=True)
     date_reparation = fields.Date(required=True, format='iso')
     description     = fields.Str(load_default='')
     created_at      = fields.DateTime(dump_only=True)
