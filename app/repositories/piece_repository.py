@@ -38,6 +38,8 @@ class PieceRefRepository:
 
     @staticmethod
     def save(piece: PieceRef) -> PieceRef:
+        if piece.marque_id == 0:       # ← garde
+            piece.marque_id = None
         db.session.add(piece)
         db.session.flush()
         return piece

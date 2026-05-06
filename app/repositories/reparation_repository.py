@@ -32,6 +32,7 @@ class ReparationRepository:
         print(f"Fetching reparations for technicien_id: {technicien_id}")
         return (
             Reparation.query
+            .filter_by(technicien_id=technicien_id)
             .order_by(Reparation.date_reparation.desc())
             .all()
         )
