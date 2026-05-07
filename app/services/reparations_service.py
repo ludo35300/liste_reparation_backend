@@ -158,7 +158,6 @@ def get_mes_reparations(user_id: int):
         # identity est un email ou username
         user = UserRepository.get_by_email(str(user_id))
 
-    print(f"JWT identity: {user_id!r} → user: {user}")
     if not user:
         return None
     return ReparationRepository.get_by_technicien_id(user.id)

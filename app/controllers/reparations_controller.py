@@ -77,7 +77,6 @@ def get_by_serie(numero_serie):
 @jwt_required()
 def create_reparation():
     data = reparation_schema.load(request.get_json(force=True) or {})
-    print(data)
     try:
         rep = svc.creer_reparation(data)
     except MachineAlreadyInRepairError as e:
@@ -102,7 +101,6 @@ def delete_reparation(rep_id):
 def get_mes_reparations():
     reparations = svc.get_mes_reparations(get_jwt_identity())
     identity = get_jwt_identity()
-    print(f"JWT identity: {identity!r}") 
     if reparations is None:
         return api_error('Utilisateur introuvable', 404, code='USER_NOT_FOUND')
     return jsonify(reparations_schema.dump(reparations)), 200

@@ -25,15 +25,13 @@ def create_machine(data: dict) -> Machine:
         numero_serie = numero_serie,
         modele_id    = data.get('modele_id'),
         statut       = data.get('statut', 'en_attente'),
-        date_entree  = data.get('date_entree'),
-        notes        = data.get('notes', ''),
     )
     return MachineRepository.save(machine)
 
 
 def update_machine(machine_id: int, data: dict) -> Machine:
     machine = MachineRepository.get_by_id(machine_id)
-    for field in ('statut', 'notes', 'modele_id', 'date_entree'):
+    for field in ('statut', 'modele_id'):
         if field in data:
             setattr(machine, field, data[field])
     return MachineRepository.save(machine)

@@ -24,9 +24,8 @@ def test_get_machine_by_serie_not_found():
 
 
 def test_update_machine_applies_fields():
-    mock_machine = MagicMock(statut='en_attente', notes='')
+    mock_machine = MagicMock(statut='en_attente')
     with patch('app.services.machines_service.MachineRepository.get_by_id', return_value=mock_machine), \
          patch('app.services.machines_service.MachineRepository.save', side_effect=lambda m: m):
-        result = svc.update_machine(1, {'statut': 'pret', 'notes': 'RAS'})
+        result = svc.update_machine(1, {'statut': 'pret'})
     assert result.statut == 'pret'
-    assert result.notes == 'RAS'

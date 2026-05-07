@@ -9,8 +9,6 @@ def _mock_machine():
     m.statut = 'en_attente'
     m.modele_id = None
     m.modele = None
-    m.date_entree = None
-    m.notes = ''
     m.created_at = None
     return m
 

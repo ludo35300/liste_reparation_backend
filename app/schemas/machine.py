@@ -17,6 +17,4 @@ class MachineSchema(Schema):
                         STATUTS_VALIDES,
                         error="Statut invalide. Valeurs acceptées : " + ", ".join(STATUTS_VALIDES)
                    ))
-    date_entree  = fields.Date(allow_none=True)
-    notes        = fields.Str(load_default='', validate=Length(max=2000))
     created_at   = fields.DateTime(dump_only=True)

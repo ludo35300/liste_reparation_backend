@@ -10,20 +10,27 @@ def _mock_save(obj):
 
 
 def test_creer_reparation_ok():
+    # Mock de la machine retournée par MachineRepository.get_by_id
+    mock_machine = MagicMock()
+    mock_machine.modele = None  # pas de modèle → marque_id = None
+
     with patch('app.services.reparations_service.ReparationRepository.add'), \
          patch('app.services.reparations_service.ReparationRepository.flush'), \
          patch('app.services.reparations_service.ReparationRepository.commit'), \
+         patch('app.services.reparations_service.ReparationRepository.get_by_machine', return_value=[]), \
          patch('app.services.reparations_service.PieceRefRepository.get_all_as_dict', return_value={}), \
-         patch('app.services.reparations_service.ReparationRepository.add_piece_changee'):
+         patch('app.services.reparations_service.ReparationRepository.add_piece_changee'), \
+         patch('app.services.reparations_service.MachineRepository.get_by_id', return_value=mock_machine), \
+         patch('app.services.reparations_service.MachineRepository.save'):
         rep = svc.creer_reparation({
             'machine_id': 1,
             'date_reparation': '2026-04-25',
+            'technicien_id': 5,
             'technicien': 'Ludovic',
             'pieces': [],
         })
     assert rep.machine_id == 1
     assert rep.date_reparation == date(2026, 4, 25)
-
 
 def test_creer_reparation_date_invalide():
     with pytest.raises(ValueError, match="Format de date invalide"):

@@ -77,8 +77,6 @@ def upgrade():
     sa.Column('numero_serie', sa.String(length=100), nullable=False),
     sa.Column('modele_id', sa.Integer(), nullable=True),
     sa.Column('statut', sa.String(length=20), nullable=False),
-    sa.Column('date_entree', sa.Date(), nullable=True),
-    sa.Column('notes', sa.Text(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.CheckConstraint("statut IN ('en_attente', 'en_reparation', 'pret', 'termine')", name='ck_machine_statut'),
     sa.ForeignKeyConstraint(['modele_id'], ['modeles.id'], ondelete='SET NULL'),

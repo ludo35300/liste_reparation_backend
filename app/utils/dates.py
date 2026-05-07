@@ -33,7 +33,6 @@ def normaliser_date_ocr(date_brute: str) -> str:
     - Date calendaire impossible (30/02) → retourne ''
     - Séparateurs variés (tiret, point, espace) → normalisés en /
     """
-    print(f"[DEBUG DATE] brut reçu : repr={repr(date_brute)}")
     
     if not date_brute:
         return ""
