@@ -13,8 +13,6 @@ class Machine(db.Model):
                              db.ForeignKey('modeles.id', ondelete='SET NULL'),
                              nullable=True, index=True)
     statut       = db.Column(db.String(20), nullable=False, default='en_attente')
-    date_entree  = db.Column(db.Date, nullable=True)
-    notes        = db.Column(db.Text, default='')
     created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     __table_args__ = (
