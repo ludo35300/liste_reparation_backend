@@ -1,5 +1,7 @@
 from datetime import date as date_type
 
+from cv2 import data
+
 from app.models.reparation import Reparation
 from app.models.piece_changee import PieceChangee
 from app.models.piece_ref import PieceRef
@@ -23,21 +25,39 @@ def creer_reparation(data: dict) -> Reparation:
         raise ValueError(f"Format de date invalide : {date_val!r}. Attendu : YYYY-MM-DD")
     # ── GARDE : machine déjà en réparation ───────────────────────────
     machine_id = data.get('machine_id')
-    if machine_id:
-        reparations = ReparationRepository.get_by_machine(machine_id)
-        if len(reparations) > 0:
-            # Vérifie si la dernière réparation est encore ouverte (pas de date_cloture)
-            last = reparations[-1]
-            if not getattr(last, 'date_cloture', None):
-                raise MachineAlreadyInRepairError(
-                    "Cette machine est déjà en réparation.",
-                    code="MACHINE_ALREADY_IN_REPAIR"
-                )
+
+    machine = MachineRepository.get_by_id(machine_id) if machine_id else None
+    if not machine:
+        raise ValueError("Machine introuvable.")
+    
+    if machine.statut == 'en_reparation':
+        raise MachineAlreadyInRepairError(
+            "Cette machine est déjà en réparation.",
+            code="MACHINE_ALREADY_IN_REPAIR"
+        )
+    
+    technicien_id = data.get('technicien_id') or None
+    technicien_nom = data.get('technicien', '')
+
+    if technicien_id and not technicien_nom:
+        user = UserRepository.get_by_id(technicien_id)
+        technicien_nom = f"{user.prenom} {user.nom}".strip() if user else ''
+
+    reparations = ReparationRepository.get_by_machine(machine_id)
+    if reparations:
+        last = reparations[-1]
+        if last.statut == 'en_cours':
+            raise MachineAlreadyInRepairError(
+                "Cette machine est déjà en réparation.",
+                code="MACHINE_ALREADY_IN_REPAIR"
+            )
+             
     rep = Reparation(
         machine_id=data['machine_id'],
-        technicien=data.get('technicien', ''),
+        technicien=technicien_nom,
         technicien_id=data.get('technicien_id') or None,
         date_reparation=date_rep,
+        statut='en_cours',
         description=data.get('description', data.get('notes', ''))
     )
     ReparationRepository.add(rep)      # db.session.add() — pas de commit
@@ -45,8 +65,6 @@ def creer_reparation(data: dict) -> Reparation:
 
     pieces_connues = PieceRefRepository.get_all_as_dict()
 
-    # ✅ Récupérer la machine UNE FOIS ici (utilisée pour marque_id + statut final)
-    machine = MachineRepository.get_by_id(data['machine_id'])
     marque_id = machine.modele.marque_id if machine and machine.modele else None
 
     for p in data.get('pieces', []):
