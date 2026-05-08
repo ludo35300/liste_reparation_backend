@@ -58,12 +58,14 @@ def creer_reparation(data: dict) -> Reparation:
 
         piece_obj = PieceRefRepository.get_by_ref(ref_corrigee)
         if not piece_obj and p.get('is_new'):
+            if not marque_id:
+                raise ValueError("Impossible de créer une nouvelle référence de pièce sans marque associée.")
             piece_obj = PieceRef(
                 ref_piece=ref_corrigee,
                 designation=p.get('designation', designation),
                 marque_id=marque_id
             )
-            PieceRefRepository.add(piece_obj)    # pas de commit non plus
+            PieceRefRepository.add(piece_obj)
             PieceRefRepository.flush()           # génère piece_obj.id pour la relation avec PieceChangee
 
         if piece_obj:
