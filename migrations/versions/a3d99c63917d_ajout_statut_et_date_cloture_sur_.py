@@ -33,4 +33,3 @@ def downgrade():
         batch_op.drop_column('statut')
         batch_op.drop_column('date_cloture')
 
-    # ### end Alembic commands ###
