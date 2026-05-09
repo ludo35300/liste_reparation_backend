@@ -14,6 +14,9 @@ class PasswordResetToken(db.Model):
 
     user = db.relationship('User', back_populates='reset_token')
 
+    @property
+    def is_expired(self) -> bool:
+        return datetime.now(timezone.utc) > self.expires_at
 
     def __repr__(self):
         return f'<PasswordResetToken user_id={self.user_id}>'
