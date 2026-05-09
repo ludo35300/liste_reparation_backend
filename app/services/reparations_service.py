@@ -1,7 +1,5 @@
 from datetime import date as date_type
 
-from cv2 import data
-
 from app.models.reparation import Reparation
 from app.models.piece_changee import PieceChangee
 from app.models.piece_ref import PieceRef
@@ -43,14 +41,6 @@ def creer_reparation(data: dict) -> Reparation:
         user = UserRepository.get_by_id(technicien_id)
         technicien_nom = f"{user.prenom} {user.nom}".strip() if user else ''
 
-    reparations = ReparationRepository.get_by_machine(machine_id)
-    if reparations:
-        last = reparations[-1]
-        if last.statut == 'en_cours':
-            raise MachineAlreadyInRepairError(
-                "Cette machine est déjà en réparation.",
-                code="MACHINE_ALREADY_IN_REPAIR"
-            )
              
     rep = Reparation(
         machine_id=data['machine_id'],
