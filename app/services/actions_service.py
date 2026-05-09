@@ -1,6 +1,6 @@
 from datetime import date as date_type
 
-from app.models.reparation_action import ReparationAction, ActionPieceChangee
+from app.models.reparation_action import ReparationAction
 from app.repositories.action_repository import ActionRepository
 from app.repositories.reparation_repository import ReparationRepository
 from app.repositories.machine_repository import MachineRepository
@@ -45,11 +45,7 @@ def ajouter_action(reparation_id: int, data: dict) -> ReparationAction:
         piece_ref = PieceRefRepository.get_by_id(p['piece_ref_id'])
         if not piece_ref:
             raise ValueError(f"Pièce introuvable : id={p['piece_ref_id']}")
-        ActionRepository.add_piece(ActionPieceChangee(
-            action_id    = action.id,
-            piece_ref_id = piece_ref.id,
-            quantite     = p.get('quantite', 1),
-        ))
+        
 
     # Si l'action change le statut de la machine → mettre à jour
     if data.get('statut_apres') and reparation.machine:
