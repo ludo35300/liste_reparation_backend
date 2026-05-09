@@ -1,5 +1,5 @@
 from app.extensions import db
-from app.models.reparation_action import ReparationAction, ActionPieceChangee
+from app.models.reparation_action import ReparationAction
 
 
 class ActionRepository:
@@ -21,10 +21,6 @@ class ActionRepository:
     @staticmethod
     def add(action: ReparationAction) -> None:
         db.session.add(action)
-
-    @staticmethod
-    def add_piece(piece: ActionPieceChangee) -> None:
-        db.session.add(piece)
 
     @staticmethod
     def flush() -> None:

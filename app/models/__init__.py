@@ -4,14 +4,12 @@ from .machine             import Machine
 from .piece_ref           import PieceRef
 from .reparation          import Reparation
 from .piece_changee       import PieceChangee
-from .reparation_action   import ReparationAction, ActionPieceChangee
+from .reparation_action   import ReparationAction
 from .user                import User
 from .password_reset      import PasswordResetToken
 
 __all__ = [
     'Marque', 'Modele', 'modele_piece_refs',
-    'Machine', 'PieceRef',
-    'Reparation', 'PieceChangee',
-    'ReparationAction', 'ActionPieceChangee',
-    'User', 'PasswordResetToken',
+    'Machine', 'PieceRef', 'Reparation', 'PieceChangee',
+    'ReparationAction', 'User', 'PasswordResetToken',
 ]

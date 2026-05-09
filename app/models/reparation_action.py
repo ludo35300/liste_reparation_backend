@@ -54,37 +54,7 @@ class ReparationAction(db.Model):
 
     reparation    = db.relationship('Reparation',      back_populates='actions')
     technicien_ref = db.relationship('User',           foreign_keys=[technicien_id])
-    pieces        = db.relationship('ActionPieceChangee',
-                                    back_populates='action',
-                                    cascade='all, delete-orphan', lazy='select')
+
 
     def __repr__(self):
         return f'<ReparationAction {self.type} rep={self.reparation_id}>'
-
-
-class ActionPieceChangee(db.Model):
-    """Pièces utilisées dans le cadre d'une action spécifique."""
-    __tablename__ = 'action_pieces_changees'
-
-    id           = db.Column(db.Integer, primary_key=True)
-    action_id    = db.Column(db.Integer,
-                             db.ForeignKey('reparation_actions.id', ondelete='CASCADE'),
-                             nullable=False, index=True)
-    piece_ref_id = db.Column(db.Integer,
-                             db.ForeignKey('piece_refs.id', ondelete='RESTRICT'),
-                             nullable=False, index=True)
-    quantite     = db.Column(db.Integer, nullable=False, default=1)
-
-    action    = db.relationship('ReparationAction', back_populates='pieces')
-    piece_ref = db.relationship('PieceRef')
-
-    @property
-    def ref_piece(self) -> str:
-        return self.piece_ref.ref_piece if self.piece_ref else ''
-
-    @property
-    def designation(self) -> str:
-        return self.piece_ref.designation if self.piece_ref else ''
-
-    def __repr__(self):
-        return f'<ActionPieceChangee {self.ref_piece} x{self.quantite}>'
