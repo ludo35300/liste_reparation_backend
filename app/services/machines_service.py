@@ -69,3 +69,6 @@ def get_machine_info(machine_id: int) -> dict:
             } if (info and info.exploded_view) else None,
         }
     }
+
+def search_machines_by_serie(query: str):
+    return MachineRepository.search_by_serie_partial(query)
