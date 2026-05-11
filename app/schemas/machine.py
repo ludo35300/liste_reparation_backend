@@ -1,7 +1,7 @@
 # ── Machine ───────────────────────────────────────────────────
 from marshmallow import Schema, fields, EXCLUDE
 from marshmallow.validate import Length, OneOf
-from .modele import ModeleSimpleSchema
+from .modele import ModeleSchema
 
 STATUTS_VALIDES = ('en_attente', 'en_reparation', 'pret', 'termine')
 
@@ -12,7 +12,7 @@ class MachineSchema(Schema):
     id           = fields.Int(dump_only=True)
     numero_serie = fields.Str(required=True, validate=Length(min=1, max=100))
     modele_id    = fields.Int(allow_none=True)
-    modele       = fields.Nested(ModeleSimpleSchema, dump_only=True)
+    modele       = fields.Nested(ModeleSchema, dump_only=True)
     statut       = fields.Str(load_default='en_attente', validate=OneOf(
                         STATUTS_VALIDES,
                         error="Statut invalide. Valeurs acceptées : " + ", ".join(STATUTS_VALIDES)

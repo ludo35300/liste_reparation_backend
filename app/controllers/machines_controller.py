@@ -47,3 +47,13 @@ def delete_machine(machine_id):
 def get_machine_info(machine_id):
     """Retourne les specs + vue éclatée si disponibles pour ce modèle."""
     return jsonify(svc.get_machine_info(machine_id)), 200
+
+@machines_bp.route('/machines/search', methods=['GET'])
+@jwt_required()
+def search_machines():
+    q = request.args.get('q', '').strip()
+    if not q:
+        return jsonify([]), 200
+
+    machines = svc.search_machines_by_serie(q)
+    return jsonify(machines_schema.dump(machines)), 200

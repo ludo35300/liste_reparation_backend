@@ -59,3 +59,17 @@ class MachineRepository:
         from app.models.machine import Machine
         machine = db.session.get(Machine, machine_id)
         return machine is not None and machine.statut == 'en_reparation'
+
+    @staticmethod
+    def search_by_serie_partial(query: str) -> list[Machine]:
+        q = query.strip().upper()
+        if not q:
+            return []
+
+        return (
+            Machine.query
+            .options(joinedload(Machine.modele).joinedload(Modele.marque))
+            .filter(Machine.numero_serie.ilike(f"%{q}%"))
+            .order_by(Machine.created_at.desc())
+            .all()
+        )
