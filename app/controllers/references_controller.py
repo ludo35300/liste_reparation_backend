@@ -125,6 +125,10 @@ def get_piece(piece_id):
 @jwt_required()
 def create_piece():
     data = piece_schema.load(request.get_json(force=True) or {})
+    marque_id = data.get('marque_id')
+    if not marque_id:
+        return api_error("La marque est obligatoire.", 400, code="VALIDATION_ERROR")
+    print(data)
     piece = svc.create_piece(
         data['ref_piece'],
         data.get('designation', ''),
