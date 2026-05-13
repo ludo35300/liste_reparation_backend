@@ -16,7 +16,7 @@ depends_on = None
 
 def upgrade():
     op.drop_constraint('ck_reparation_statut', 'reparations', type_='check')
-    op.execute("UPDATE reparations SET statut = 'terminee' WHERE statut = 'en_cours'")
+    op.execute("UPDATE reparations SET statut = 'terminee' WHERE statut = 'en_reparation'")
     op.execute("UPDATE reparations SET statut = 'terminee' WHERE statut = 'termine'")
     op.create_check_constraint(
         'ck_reparation_statut',
@@ -27,10 +27,10 @@ def upgrade():
 
 def downgrade():
     op.drop_constraint('ck_reparation_statut', 'reparations', type_='check')
-    op.execute("UPDATE reparations SET statut = 'en_cours' WHERE statut = 'en_reparation'")
+    op.execute("UPDATE reparations SET statut = 'en_reparation' WHERE statut = 'en_reparation'")
     op.execute("UPDATE reparations SET statut = 'termine' WHERE statut = 'terminee'")
     op.create_check_constraint(
         'ck_reparation_statut',
         'reparations',
-        "statut IN ('en_cours', 'termine')"
+        "statut IN ('en_reparation', 'termine')"
     )
