@@ -6,8 +6,6 @@ TYPES_ACTION_VALIDES = (
     'nettoyage', 'test', 'commentaire', 'statut'
 )
 
-STATUTS_MACHINE_VALIDES = ('en_attente', 'en_reparation', 'pret', 'termine')
-
 RESULTATS_CLOTURE_VALIDES = (
     'reparee', 'non_reparable', 'attente_piece', 'restitution'
 )
