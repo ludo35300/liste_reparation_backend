@@ -1,8 +1,6 @@
 from datetime import datetime, timezone
 from app.extensions import db
 
-STATUTS_VALIDES = ('en_attente', 'en_reparation', 'pret', 'termine')
-
 
 class Machine(db.Model):
     __tablename__ = 'machines'

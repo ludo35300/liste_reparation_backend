@@ -1,12 +1,12 @@
 from marshmallow import Schema, fields, EXCLUDE, validates, ValidationError
 from marshmallow.validate import Length, OneOf, Range
 
+from app.constantes.reparations import STATUTS_VALIDES
+
 TYPES_ACTION_VALIDES = (
     'diagnostic', 'demontage', 'remplacement_piece',
     'nettoyage', 'test', 'commentaire', 'statut'
 )
-STATUTS_VALIDES = ('en_attente', 'en_reparation', 'pret', 'termine')
-
 
 class ActionPieceChangeeSchema(Schema):
     class Meta:

@@ -1,9 +1,6 @@
 from datetime import datetime, timezone
 from app.extensions import db
 
-STATUTS_REPARATION_VALIDES = ('en_cours', 'termine')
-
-
 class Reparation(db.Model):
     __tablename__ = 'reparations'
 
@@ -17,14 +14,14 @@ class Reparation(db.Model):
     technicien      = db.Column(db.String(100), default='')
     date_reparation = db.Column(db.Date, nullable=False)
     date_cloture    = db.Column(db.Date, nullable=True)
-    statut          = db.Column(db.String(20), nullable=False, default='en_cours')
+    statut          = db.Column(db.String(20), nullable=False, default='en_reparation')
     description     = db.Column(db.Text, default='')
     created_at      = db.Column(db.DateTime(timezone=True),
                                 default=lambda: datetime.now(timezone.utc))
 
     __table_args__ = (
         db.CheckConstraint(
-            "statut IN ('en_cours', 'termine')",
+            "statut IN STATUTS_REPARATION_VALIDES",
             name='ck_reparation_statut'
         ),
     )

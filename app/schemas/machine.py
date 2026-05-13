@@ -1,9 +1,9 @@
 # ── Machine ───────────────────────────────────────────────────
 from marshmallow import Schema, fields, EXCLUDE
 from marshmallow.validate import Length, OneOf
-from .modele import ModeleSchema
 
-STATUTS_VALIDES = ('en_attente', 'en_reparation', 'pret', 'termine')
+from app.constantes.reparations import STATUTS_VALIDES
+from .modele import ModeleSchema
 
 class MachineSchema(Schema):
     class Meta:
