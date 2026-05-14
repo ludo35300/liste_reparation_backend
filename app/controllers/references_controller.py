@@ -59,6 +59,7 @@ def create_marque():
             file.save(os.path.join(folder, filename))
 
             url_logo = f"{request.scheme}://{request.host}/static/logos/{filename}"
+            
 
         marque = svc.create_marque(nom, url_logo)
         return jsonify(marque_schema.dump(marque)), 201
