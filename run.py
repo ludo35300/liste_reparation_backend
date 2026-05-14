@@ -1,16 +1,8 @@
-from flask import Flask
-from werkzeug.middleware.proxy_fix import ProxyFix
+from app import create_app
+from dotenv import load_dotenv
+load_dotenv()
 
-def create_app():
-    app = Flask(__name__)
+app = create_app()
 
-    app.wsgi_app = ProxyFix(
-        app.wsgi_app,
-        x_for=1,
-        x_proto=1,
-        x_host=1,
-        x_prefix=1,
-    )
-
-    # init db, blueprints, config, etc.
-    return app
+if __name__ == "__main__":
+    app.run(port=5000, debug=True)
