@@ -38,6 +38,31 @@ def get_marque(marque_id):
 @references_bp.route('/marques', methods=['POST'])
 @jwt_required()
 def create_marque():
+    if request.content_type and request.content_type.startswith('multipart/form-data'):
+        nom = (request.form.get('nom') or '').strip().upper()
+        file = request.files.get('logo')
+        url_logo = None
+
+        if not nom:
+            return api_error("Le nom de la marque est obligatoire.", 400, code="VALIDATION_ERROR")
+
+        if file and file.filename:
+            if not allowed_file(file.filename):
+                return api_error('Format non supporté (png, jpg, jpeg, webp, svg)', 422, code='VALIDATION_ERROR')
+
+            ext = file.filename.rsplit('.', 1)[1].lower()
+            safe_nom = secure_filename(nom.replace(' ', '_'))
+            filename = secure_filename(f"{safe_nom}.{ext}")
+
+            folder = os.path.join(os.path.dirname(__file__), '..', 'static', 'logos')
+            os.makedirs(folder, exist_ok=True)
+            file.save(os.path.join(folder, filename))
+
+            url_logo = f"{request.host_url.rstrip('/')}/static/logos/{filename}"
+
+        marque = svc.create_marque(nom, url_logo)
+        return jsonify(marque_schema.dump(marque)), 201
+
     data = marque_schema.load(request.get_json(force=True) or {})
     return jsonify(marque_schema.dump(svc.create_marque(data['nom'], data.get('url_logo')))), 201
 
