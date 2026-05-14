@@ -1,7 +1,9 @@
 import os
+from uuid import uuid4
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
 from werkzeug.utils import secure_filename
+from app.constantes.reparations import LOGO_FOLDER
 from app.schemas.modele import ModeleSchema, ModeleSimpleSchema
 from app.schemas.marque import MarqueSchema
 from app.schemas.piece import PieceRefSchema, PieceRefUpdateSchema
@@ -50,13 +52,15 @@ def create_marque():
             if not allowed_file(file.filename):
                 return api_error('Format non supporté (png, jpg, jpeg, webp, svg)', 422, code='VALIDATION_ERROR')
 
+            LOGO_FOLDER.mkdir(parents=True, exist_ok=True)
             ext = file.filename.rsplit('.', 1)[1].lower()
-            safe_nom = secure_filename(nom.replace(' ', '_'))
-            filename = secure_filename(f"{safe_nom}.{ext}")
+            filename = f"{uuid4().hex}.{ext}"
+            path = LOGO_FOLDER / filename
 
-            folder = os.path.join(os.path.dirname(__file__), '..', 'static', 'logos')
-            os.makedirs(folder, exist_ok=True)
-            file.save(os.path.join(folder, filename))
+            file.save(str(path))
+
+            if not path.exists():
+                return api_error("Échec de l'enregistrement du logo.", 500, code="UPLOAD_ERROR")
 
             url_logo = f"{request.scheme}://{request.host}/static/logos/{filename}"
             
