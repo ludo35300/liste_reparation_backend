@@ -2,6 +2,7 @@ from flask import Flask, jsonify
 from marshmallow import ValidationError
 from flask_cors import CORS
 from flask_jwt_extended.exceptions import JWTExtendedException
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from app.utils.responses import api_error
 from .config import DevConfig, ProdConfig
@@ -13,6 +14,15 @@ from dotenv import load_dotenv
 def create_app(config=None):
     load_dotenv()
     app = Flask(__name__)
+
+    app.wsgi_app = ProxyFix(
+        app.wsgi_app,
+        x_for=1,
+        x_proto=1,
+        x_host=1,
+        x_prefix=1,
+    )
+
     app.config.from_object(ProdConfig if os.getenv("FLASK_ENV") == 'production' else DevConfig)
     if config is not None:
         app.config.from_object(config)
