@@ -47,7 +47,7 @@ def creer_reparation(data: dict) -> Reparation:
         technicien=technicien_nom,
         technicien_id=data.get('technicien_id') or None,
         date_reparation=date_rep,
-        statut='en_cours',
+        statut='en_reparation',
         description=data.get('description', data.get('notes', ''))
     )
     ReparationRepository.add(rep)      # db.session.add() — pas de commit
@@ -105,7 +105,8 @@ def modifier_reparation(rep_id: int, data: dict) -> Reparation:
         rep.date_reparation = data['date_reparation']
     if 'description' in data:
         rep.description = data['description']
-
+    if 'statut' in data:
+        rep.statut = data['statut']
     if 'pieces' in data:
         # Supprimer les anciennes pièces
         for p in list(rep.pieces):

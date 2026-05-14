@@ -18,13 +18,13 @@ depends_on = None
 
 def upgrade():
     op.add_column('reparations', sa.Column('date_cloture', sa.Date(), nullable=True))
-    op.add_column('reparations', sa.Column('statut', sa.String(length=20), nullable=True, server_default='en_cours'))
-    op.execute("UPDATE reparations SET statut = 'en_cours' WHERE statut IS NULL")
+    op.add_column('reparations', sa.Column('statut', sa.String(length=20), nullable=True, server_default='en_reparation'))
+    op.execute("UPDATE reparations SET statut = 'en_reparation' WHERE statut IS NULL")
     op.alter_column('reparations', 'statut', nullable=False, existing_type=sa.String(length=20))
     op.create_check_constraint(
         'ck_reparation_statut',
         'reparations',
-        "statut IN ('en_cours', 'termine')"
+        "statut IN ('en_reparation', 'termine')"
 )
 
 def downgrade():
