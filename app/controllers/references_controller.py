@@ -4,9 +4,10 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
 from werkzeug.utils import secure_filename
 from app.constantes.reparations import LOGO_FOLDER
+from app.models.piece_ref import PieceRef
 from app.schemas.modele import ModeleSchema, ModeleSimpleSchema
 from app.schemas.marque import MarqueSchema
-from app.schemas.piece import PieceRefSchema, PieceRefUpdateSchema
+from app.schemas.piece import PieceRefSchema, PieceRefStockSchema, PieceRefUpdateSchema
 from app.services import references_service as svc
 from app.utils.responses import api_error
 from app.extensions import db
@@ -173,7 +174,17 @@ def update_piece(piece_id):
     data  = piece_update_schema.load(request.get_json(force=True) or {})
     piece = svc.update_piece(piece_id, data['ref_piece'], data['designation'])
     return jsonify(piece_schema.dump(piece)), 200
- 
+
+@references_bp.route('/pieces/<int:piece_id>/stock', methods=['PATCH'])
+@jwt_required()
+def update_stock(piece_id):
+    piece = PieceRef.query.get_or_404(piece_id)
+    schema = PieceRefStockSchema()
+    data = schema.load(request.get_json() or {})
+    piece.quantite = data['quantite']
+    db.session.commit()
+    return PieceRefSchema().dump(piece), 200
+
 @references_bp.route('/pieces/<int:piece_id>', methods=['DELETE'])
 @jwt_required()
 def delete_piece(piece_id):
