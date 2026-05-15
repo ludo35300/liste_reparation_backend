@@ -16,6 +16,7 @@ class PieceRef(db.Model):
                                back_populates='pieces', lazy='select')
     utilisations = db.relationship('PieceChangee', back_populates='piece_ref',
                                    lazy='select')
-
+    quantite    = db.Column(db.Integer, nullable=False, default=0) 
+    
     def __repr__(self):
         return f'<PieceRef {self.ref_piece}>'

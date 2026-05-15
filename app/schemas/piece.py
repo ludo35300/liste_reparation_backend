@@ -9,7 +9,8 @@ class PieceRefSchema(Schema):
     id          = fields.Int(dump_only=True)
     ref_piece   = fields.Str(required=True, validate=Length(min=1, max=100))
     designation = fields.Str(load_default='', validate=Length(max=200))
-    marque_id   = fields.Int(required=True, load_only=True)
+    marque_id   = fields.Int(required=True)
+    quantite    = fields.Int(load_default=0, validate=Range(min=0))
     
 # ── PieceRefUpdate ──────────────────────────────────────────────
 class PieceRefUpdateSchema(Schema):
@@ -32,3 +33,11 @@ class PieceChangeeSchema(Schema):
                         min=1, error="La quantité doit être ≥ 1"
                    ))
     is_new       = fields.Bool(load_default=False)
+
+class PieceRefStockSchema(Schema):
+    class Meta:
+        unknown = EXCLUDE
+
+    quantite = fields.Int(required=True, validate=Range(
+        min=0, error="La quantité doit être ≥ 0"
+    ))
