@@ -51,7 +51,6 @@ class DevConfig:
 
     # ── Upload / Divers ───────────────────────────────────────────────────────
     MAX_CONTENT_LENGTH          = 32 * 1024 * 1024  # Taille max des uploads : 32 Mo
-    JSON_ENSURE_ASCII           = False              # Permet les caractères accentués dans les réponses JSON
 
     RATELIMIT_ENABLED           = True
     RATELIMIT_STORAGE_URI       = "memory://"
@@ -77,7 +76,7 @@ class ProdConfig(DevConfig):
     CORS_ORIGINS                = [origin.strip() for origin in os.getenv("CORS_ORIGINS", "").split(",") if origin.strip()]
 
     RATELIMIT_ENABLED           = True
-    RATELIMIT_STORAGE_URI       = os.getenv("RATELIMIT_STORAGE_URI", "memory://")
+    RATELIMIT_STORAGE_URI       = os.getenv("RATELIMIT_STORAGE_URI", "redis://redis:6379/0")
     RATELIMIT_HEADERS_ENABLED   = True
     RATELIMIT_STRATEGY          = "fixed-window"
 
