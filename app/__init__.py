@@ -1,12 +1,16 @@
 # app/__init__.py
 # ─────────────────────────────────────────────────────────────────────────────
-# Point d'entrée de l'application : pattern Application Factory.
+# Point d'entrée principal de l'application Flask.
 #
-# create_app() permet de :
-#   - créer plusieurs instances de l'app (tests, prod) sans conflit global
-#   - injecter une configuration différente selon l'environnement
-#   - éviter les imports circulaires entre modules
+# Rôle de ce fichier :
+# - créer l'application
+# - charger la configuration selon l'environnement
+# - initialiser les extensions
+# - enregistrer les handlers d'erreur
+# - enregistrer les blueprints
+#
 # ─────────────────────────────────────────────────────────────────────────────
+
 import os
 
 from dotenv import load_dotenv
@@ -18,29 +22,103 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 
 from app.utils.responses import api_error
 from .config import DevConfig, ProdConfig
-from .extensions import jwt, limiter, db, migrate, ma
+from .extensions import db, jwt, limiter, ma, migrate
 
 
-def create_app(config=None):
-    """Crée et configure l'application Flask.
+def register_error_handlers(app: Flask) -> None:
+    """Enregistre les gestionnaires d'erreurs globaux de l'application."""
 
-    Args:
-        config: Objet de configuration optionnel. Utilisé principalement
-                dans les tests (ex: TestConfig) pour surcharger DevConfig/ProdConfig.
+    @app.errorhandler(JWTExtendedException)
+    def handle_jwt_error(error):
+        # Toute erreur JWT (absence, expiration, token invalide, mauvais type)
+        # retourne une réponse uniforme.
+        return api_error("Non authentifié", 401, code="AUTH_REQUIRED")
 
-    Returns:
-        Une instance Flask configurée et prête à servir les requêtes.
-    """
-    # Charge les variables d'environnement depuis le fichier .env
-    # (doit être appelé avant app.config.from_object pour que os.getenv() fonctionne)
+    @app.errorhandler(ValidationError)
+    def handle_validation_error(error):
+        # Erreurs Marshmallow lors du load()/validate()
+        return api_error(
+            "Données invalides",
+            422,
+            code="VALIDATION_ERROR",
+            details=error.messages,
+        )
+
+    @app.errorhandler(429)
+    def handle_rate_limit(error):
+        # Flask-Limiter peut fournir un Retry-After dynamique,
+        # mais ici on garde une réponse homogène simple.
+        response = jsonify({
+            "message": "Trop de tentatives",
+            "code": "RATE_LIMITED",
+        })
+        response.status_code = 429
+        response.headers["Retry-After"] = "60"
+        return response
+
+def register_extensions(app: Flask) -> None:
+    """Initialise toutes les extensions Flask."""
+
+    jwt.init_app(app)
+    limiter.init_app(app)
+    db.init_app(app)
+    migrate.init_app(app, db)
+    ma.init_app(app)
+
+    # CORS doit être initialisé après app.config
+    # supports_credentials=True est requis pour les cookies JWT.
+    CORS(
+        app,
+        origins=app.config["CORS_ORIGINS"],
+        supports_credentials=True,
+    )
+
+def register_blueprints(app: Flask) -> None:
+    """Enregistre tous les blueprints API."""
+
+    from .auth.routes import auth_bp
+    from .controllers.actions_controller import actions_bp
+    from .controllers.machines_controller import machines_bp
+    from .controllers.references_controller import references_bp
+    from .controllers.reparations_controller import reparations_bp
+    from .controllers.statistiques_controller import stats_bp
+    from .controllers.user_controller import user_bp
+    from .ocr.routes import ocr_bp
+
+    app.register_blueprint(auth_bp, url_prefix="/api/auth")
+    app.register_blueprint(user_bp, url_prefix="/api")
+    app.register_blueprint(machines_bp, url_prefix="/api")
+    app.register_blueprint(reparations_bp, url_prefix="/api")
+    app.register_blueprint(stats_bp, url_prefix="/api")
+    app.register_blueprint(ocr_bp, url_prefix="/api")
+    app.register_blueprint(references_bp, url_prefix="/api")
+    app.register_blueprint(actions_bp, url_prefix="/api")
+
+
+def register_models() -> None:
+    """Importe les modèles pour que Flask-Migrate/Alembic les voie bien."""
+
+    from app.models import (
+        Machine,
+        Marque,
+        Modele,
+        PasswordResetToken,
+        PieceChangee,
+        PieceRef,
+        Reparation,
+        User,
+        modele_piece_refs,
+    )
+
+
+def create_app(config=None) -> Flask:
+    """Factory principale de l'application Flask."""
+
     load_dotenv()
-
     app = Flask(__name__)
-
-    # ProxyFix : corrige les headers IP/protocole quand l'app est derrière un reverse proxy (Nginx).
-    # x_for=1 : lit X-Forwarded-For (IP du client réel, utile pour le rate limiting par IP)
-    # x_proto=1 : lit X-Forwarded-Proto (https) pour que JWT_COOKIE_SECURE fonctionne correctement
-    # x_host=1, x_prefix=1 : reconstruction correcte de l'URL complète
+    # ProxyFix ne doit être activé que si l'application est réellement
+    # derrière un reverse proxy (Nginx, Traefik, etc.).
+    # Ici on fait confiance à 1 proxy pour chaque header.
     app.wsgi_app = ProxyFix(
         app.wsgi_app,
         x_for=1,
@@ -49,80 +127,19 @@ def create_app(config=None):
         x_prefix=1,
     )
 
-    # Sélection automatique de la configuration selon l'environnement :
-    #   FLASK_ENV=production  → ProdConfig (JWT_COOKIE_SECURE=True, JWT_SECRET_KEY obligatoire)
-    #   (défaut)              → DevConfig
-    app.config.from_object(ProdConfig if os.getenv("FLASK_ENV") == 'production' else DevConfig)
+    # Choix de la configuration selon l'environnement
+    env_config = ProdConfig if os.getenv("FLASK_ENV") == "production" else DevConfig
+    app.config.from_object(env_config)
 
-    # Permet de surcharger la config depuis l'extérieur (tests, scripts custom)
+    # Permet d'injecter une config de test ou de surcharge depuis l'appelant
     if config is not None:
         app.config.from_object(config)
 
-    # ── Gestionnaires d'erreurs globaux ─────────────────────────────────────────────
+    register_error_handlers(app)
+    register_extensions(app)
+    register_blueprints(app)
 
-    @app.errorhandler(JWTExtendedException)
-    def handle_jwt_error(e):
-        """Capture toutes les exceptions JWT (token absent, expiré, invalide)
-        et retourne une réponse JSON homogène 401."""
-        return api_error('Non authentifié', 401, code='AUTH_REQUIRED')
-
-    @app.errorhandler(ValidationError)
-    def handle_validation_error(e):
-        """Capture les erreurs de validation Marshmallow levées lors du schema.load()
-        et retourne le détail des champs invalides en 422."""
-        return api_error('Données invalides', 422, code='VALIDATION_ERROR', details=e.messages)
-
-    @app.errorhandler(429)
-    def ratelimit_handler(e):
-        """Capture les dépassements de rate limit (Flask-Limiter).
-        Retry-After indique au client combien de secondes attendre avant de réessayer."""
-        resp = jsonify({"message": "Trop de tentatives", "code": "RATE_LIMITED"})
-        resp.status_code = 429
-        resp.headers['Retry-After'] = '60'
-        return resp
-
-    # ── Initialisation des extensions ───────────────────────────────────────────────
-    # L'ordre est important : CORS avant JWT pour que les headers prévols soient traités
-    CORS(app, origins=app.config['CORS_ORIGINS'], supports_credentials=True)
-    jwt.init_app(app)
-    limiter.init_app(app)
-    db.init_app(app)
-    migrate.init_app(app, db)
-    ma.init_app(app)
-
-    # ── Pré-chargement des modèles SQLAlchemy ──────────────────────────────────────
     with app.app_context():
-        # Import centralisé de TOUS les modèles dans le contexte applicatif.
-        # Indispensable pour qu'Alembic (flask db migrate) détecte les tables
-        # et génère les migrations correctement.
-        # noqa: F401 → les imports sont volontaires même s'ils semblent inutilisés ici.
-        from app.models import (  # noqa: F401
-            Marque, Modele, modele_piece_refs,
-            Machine, PieceRef,
-            Reparation, PieceChangee,
-            User, PasswordResetToken
-        )
-
-    # ── Enregistrement des Blueprints (routes) ────────────────────────────────────
-    # Les imports sont faits ici (et non en haut du fichier) pour éviter les
-    # imports circulaires : les contrôleurs importent db/extensions qui
-    # sont définis dans ce même module.
-    from .auth.routes                         import auth_bp
-    from .controllers.user_controller         import user_bp
-    from .controllers.machines_controller     import machines_bp
-    from .controllers.reparations_controller  import reparations_bp
-    from .controllers.statistiques_controller import stats_bp
-    from .controllers.references_controller   import references_bp
-    from .controllers.actions_controller      import actions_bp
-    from .ocr.routes                          import ocr_bp
-
-    app.register_blueprint(auth_bp,         url_prefix='/api/auth')
-    app.register_blueprint(user_bp,         url_prefix='/api')
-    app.register_blueprint(machines_bp,     url_prefix='/api')
-    app.register_blueprint(reparations_bp,  url_prefix='/api')
-    app.register_blueprint(stats_bp,        url_prefix='/api')
-    app.register_blueprint(references_bp,   url_prefix='/api')
-    app.register_blueprint(actions_bp,      url_prefix='/api')
-    app.register_blueprint(ocr_bp,          url_prefix='/api')
+        register_models()
 
     return app
