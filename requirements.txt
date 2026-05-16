@@ -32,3 +32,4 @@ numpy
 pillow
 python-dotenv
 requests
+redis>=5.0.0
