@@ -83,6 +83,7 @@ def register_blueprints(app: Flask) -> None:
     from .controllers.statistiques_controller import stats_bp
     from .controllers.user_controller import user_bp
     from .ocr.routes import ocr_bp
+    from .controllers.images_controller import images_bp
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(user_bp, url_prefix="/api")
@@ -92,6 +93,7 @@ def register_blueprints(app: Flask) -> None:
     app.register_blueprint(ocr_bp, url_prefix="/api")
     app.register_blueprint(references_bp, url_prefix="/api")
     app.register_blueprint(actions_bp, url_prefix="/api")
+    app.register_blueprint(images_bp, url_prefix="/api")
 
 def register_models() -> None:
     """Importe les modèles pour que Flask-Migrate/Alembic les voie bien."""
