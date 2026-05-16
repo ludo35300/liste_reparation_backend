@@ -5,7 +5,6 @@ from app.repositories.machine_repository import MachineRepository
 from app.repositories.reparation_repository import ReparationRepository
 from app.schemas.machine import MachineSchema
 from app.schemas.reparation import ReparationSchema
-from app.utils.exceptions import ConflictError
 from app.utils.responses import api_error
 from app.services import reparations_service as svc
 from app.utils.exceptions import MachineAlreadyInRepairError
@@ -100,7 +99,6 @@ def delete_reparation(rep_id):
 @jwt_required()
 def get_mes_reparations():
     reparations = svc.get_mes_reparations(get_jwt_identity())
-    identity = get_jwt_identity()
     if reparations is None:
         return api_error('Utilisateur introuvable', 404, code='USER_NOT_FOUND')
     return jsonify(reparations_schema.dump(reparations)), 200

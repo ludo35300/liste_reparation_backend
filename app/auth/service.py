@@ -70,7 +70,7 @@ def forgot_password(email: str):
         token_hash = hash_token(raw)
         expires    = token_expiry(30 * 60)
         UserRepository.save_reset_token(user, token_hash, expires)
-        logger.debug("reset link: http://localhost:4200/auth/reset-password?token=%s", raw)
+        #logger.debug("reset link: http://localhost:4200/auth/reset-password?token=%s", raw)
     return jsonify({"ok": True}), 200
 
 
