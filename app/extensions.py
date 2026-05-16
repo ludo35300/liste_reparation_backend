@@ -7,8 +7,6 @@
 # Cela permet de réutiliser les extensions dans les tests sans conflit.
 # ─────────────────────────────────────────────────────────────────────────────
 
-import os
-
 from flask_jwt_extended import JWTManager
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address

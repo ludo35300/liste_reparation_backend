@@ -21,7 +21,7 @@ from marshmallow import ValidationError
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from app.utils.responses import api_error
-from .config import DevConfig, ProdConfig
+from .config import DevConfig, ProdConfig, TestConfig
 from .extensions import db, jwt, limiter, ma, migrate
 
 
@@ -64,7 +64,6 @@ def register_extensions(app: Flask) -> None:
     db.init_app(app)
     migrate.init_app(app, db)
     ma.init_app(app)
-
     # CORS doit être initialisé après app.config
     # supports_credentials=True est requis pour les cookies JWT.
     CORS(
@@ -94,7 +93,6 @@ def register_blueprints(app: Flask) -> None:
     app.register_blueprint(references_bp, url_prefix="/api")
     app.register_blueprint(actions_bp, url_prefix="/api")
 
-
 def register_models() -> None:
     """Importe les modèles pour que Flask-Migrate/Alembic les voie bien."""
 
@@ -110,30 +108,34 @@ def register_models() -> None:
         modele_piece_refs,
     )
 
+def resolve_config(config_override=None):
+    """Retourne la classe de configuration à charger."""
+    if config_override is not None:
+        return config_override
+
+    app_env = os.getenv("APP_ENV", "development").lower()
+
+    if app_env == "production":
+        return ProdConfig
+    if app_env == "test":
+        return TestConfig
+    return DevConfig
 
 def create_app(config=None) -> Flask:
     """Factory principale de l'application Flask."""
-
     load_dotenv()
     app = Flask(__name__)
-    # ProxyFix ne doit être activé que si l'application est réellement
-    # derrière un reverse proxy (Nginx, Traefik, etc.).
-    # Ici on fait confiance à 1 proxy pour chaque header.
-    app.wsgi_app = ProxyFix(
-        app.wsgi_app,
-        x_for=1,
-        x_proto=1,
-        x_host=1,
-        x_prefix=1,
-    )
 
-    # Choix de la configuration selon l'environnement
-    env_config = ProdConfig if os.getenv("FLASK_ENV") == "production" else DevConfig
-    app.config.from_object(env_config)
+    if os.getenv("USE_PROXY_FIX", "true").lower() == "true":
+        app.wsgi_app = ProxyFix(
+            app.wsgi_app,
+            x_for=1,
+            x_proto=1,
+            x_host=1,
+            x_prefix=1,
+        )
 
-    # Permet d'injecter une config de test ou de surcharge depuis l'appelant
-    if config is not None:
-        app.config.from_object(config)
+    app.config.from_object(resolve_config(config))
 
     register_error_handlers(app)
     register_extensions(app)
