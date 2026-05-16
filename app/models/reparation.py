@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from app.constantes.reparations import STATUTS_REPARATION_VALIDES
 from app.extensions import db
 
 class Reparation(db.Model):
@@ -19,11 +20,9 @@ class Reparation(db.Model):
     created_at      = db.Column(db.DateTime(timezone=True),
                                 default=lambda: datetime.now(timezone.utc))
 
+    _vals = ", ".join(f"'{s}'" for s in STATUTS_REPARATION_VALIDES)
     __table_args__ = (
-        db.CheckConstraint(
-            "statut IN STATUTS_REPARATION_VALIDES",
-            name='ck_reparation_statut'
-        ),
+        db.CheckConstraint(f"statut IN ({_vals})", name='ck_reparation_statut'),
     )
 
     machine         = db.relationship('Machine', back_populates='reparations')

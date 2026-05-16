@@ -1,3 +1,5 @@
+import os
+
 from flask_jwt_extended import JWTManager
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -9,7 +11,7 @@ jwt     = JWTManager()
 limiter = Limiter(
     key_func=get_remote_address,
     default_limits=[],
-    storage_uri="memory://"   # dev → mémoire | prod → "redis://..."
+    storage_uri=os.getenv("RATELIMIT_STORAGE_URI", "memory://")
 )
 db      = SQLAlchemy()
 migrate = Migrate()
