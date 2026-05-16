@@ -53,6 +53,11 @@ class DevConfig:
     MAX_CONTENT_LENGTH          = 32 * 1024 * 1024  # Taille max des uploads : 32 Mo
     JSON_ENSURE_ASCII           = False              # Permet les caractères accentués dans les réponses JSON
 
+    RATELIMIT_ENABLED           = True
+    RATELIMIT_STORAGE_URI       = "memory://"
+    RATELIMIT_HEADERS_ENABLED   = True
+    RATELIMIT_STRATEGY          = "fixed-window"
+
 
 class ProdConfig(DevConfig):
     # ── JWT ───────────────────────────────────────────────────────────────────
@@ -71,6 +76,11 @@ class ProdConfig(DevConfig):
     # Exemple : CORS_ORIGINS=https://mon-app.fr,https://www.mon-app.fr
     CORS_ORIGINS                = os.getenv('CORS_ORIGINS', '').split(',')
 
+    RATELIMIT_ENABLED           = True
+    RATELIMIT_STORAGE_URI       = os.environ["RATELIMIT_STORAGE_URI"]  # ex: redis://redis:6379/0
+    RATELIMIT_HEADERS_ENABLED   = True
+    RATELIMIT_STRATEGY          = "fixed-window"
+
 
 class TestConfig(DevConfig):
     # ── Configuration de test (pytest) ────────────────────────────────────────
@@ -81,3 +91,4 @@ class TestConfig(DevConfig):
     RATELIMIT_ENABLED           = False  # Pas de rate limiting pendant les tests
     WTF_CSRF_ENABLED            = False
     JWT_TOKEN_LOCATION          = ["headers"]  # Plus simple à injecter dans les tests que les cookies
+    RATELIMIT_ENABLED           = False
