@@ -74,10 +74,10 @@ class ProdConfig(DevConfig):
     # ── CORS ─────────────────────────────────────────────────────────────────
     # En prod, les origines autorisées sont définies dans le .env sous forme de liste séparée par des virgules
     # Exemple : CORS_ORIGINS=https://mon-app.fr,https://www.mon-app.fr
-    CORS_ORIGINS                = os.getenv('CORS_ORIGINS', '').split(',')
+    CORS_ORIGINS                = [origin.strip() for origin in os.getenv("CORS_ORIGINS", "").split(",") if origin.strip()]
 
     RATELIMIT_ENABLED           = True
-    RATELIMIT_STORAGE_URI       = os.environ["RATELIMIT_STORAGE_URI"]  # ex: redis://redis:6379/0
+    RATELIMIT_STORAGE_URI       = os.getenv("RATELIMIT_STORAGE_URI", "memory://")
     RATELIMIT_HEADERS_ENABLED   = True
     RATELIMIT_STRATEGY          = "fixed-window"
 
