@@ -8,6 +8,7 @@ from app.schemas.reparation import ReparationSchema
 from app.utils.responses import api_error
 from app.services import reparations_service as svc
 from app.utils.exceptions import MachineAlreadyInRepairError
+from app.extensions      import db
 
 reparations_bp = Blueprint('reparations', __name__)
 machine_schema = MachineSchema()
@@ -86,8 +87,18 @@ def create_reparation():
 @jwt_required()
 def update_reparation(rep_id):
     data = reparation_schema.load(request.get_json(force=True) or {}, partial=True)
-    rep  = svc.modifier_reparation(rep_id, data)
-    return jsonify(reparation_schema.dump(rep)), 200
+
+    try:
+        rep = svc.modifier_reparation(rep_id, data)
+        return jsonify(reparation_schema.dump(rep)), 200
+
+    except ValueError as e:
+        db.session.rollback()
+        return api_error(str(e), 400, code='VALIDATION_ERROR')
+
+    except Exception:
+        db.session.rollback()
+        return api_error("Erreur lors de la mise à jour de la réparation.", 500, code='REPARATION_UPDATE_ERROR')
 
 @reparations_bp.route('/reparations/<int:rep_id>', methods=['DELETE'])
 @jwt_required()

@@ -76,7 +76,24 @@ def creer_reparation(data: dict) -> Reparation:
             PieceRefRepository.add(piece_obj)
             PieceRefRepository.flush()           # génère piece_obj.id pour la relation avec PieceChangee
 
+        qty = int(p.get('quantite', 1))
         if piece_obj:
+            piece_locked = PieceRef.query.filter_by(id=piece_obj.id).with_for_update().first()
+            if (piece_locked.quantite or 0) < qty:
+                raise ValueError(
+                    f"Stock insuffisant pour {piece_locked.ref_piece}. "
+                    f"Disponible : {piece_locked.quantite or 0}, demandé : {qty}"
+                )
+
+            piece_locked.quantite = int(piece_locked.quantite or 0) - qty
+
+            ReparationRepository.add_piece_changee(
+                PieceChangee(
+                    reparation_id=rep.id,
+                    piece_ref_id=piece_locked.id,
+                    quantite=qty
+                )
+            )
             ReparationRepository.add_piece_changee(
                 PieceChangee(
                     reparation_id=rep.id,
@@ -94,8 +111,9 @@ def creer_reparation(data: dict) -> Reparation:
 def modifier_reparation(rep_id: int, data: dict) -> Reparation:
     """
     PATCH partiel d'une réparation :
-    - Champs de base (technicien, date_reparation, description)
+    - Champs de base (technicien, date_reparation, description, statut)
     - Remplacement complet des pièces changées si 'pieces' est présent
+    - Mise à jour transactionnelle du stock PieceRef.quantite
     """
     rep = ReparationRepository.get_by_id(rep_id)
 
@@ -107,38 +125,86 @@ def modifier_reparation(rep_id: int, data: dict) -> Reparation:
         rep.description = data['description']
     if 'statut' in data:
         rep.statut = data['statut']
+
     if 'pieces' in data:
-        # Supprimer les anciennes pièces
+        pieces_connues = PieceRefRepository.get_all_as_dict()
+
+        old_map: dict[str, int] = {}
+        for p in rep.pieces:
+            ref = (p.ref_piece or '').strip().upper()
+            if not ref:
+                continue
+            old_map[ref] = old_map.get(ref, 0) + int(p.quantite or 0)
+
+        new_map: dict[str, dict] = {}
+        for p in data['pieces']:
+            qty = int(p.get('quantite', 0) or 0)
+            if qty <= 0:
+                continue
+
+            ref_brute = p.get('ref_piece', '').strip().upper()
+            ref_corrigee, designation, _ = fuzzy_piece(ref_brute, pieces_connues, cutoff=0.80)
+
+            new_map[ref_corrigee] = {
+                'ref_piece': ref_corrigee,
+                'designation': p.get('designation', designation),
+                'quantite': new_map.get(ref_corrigee, {}).get('quantite', 0) + qty,
+                'is_new': p.get('is_new', False),
+                'marque_id': p.get('marque_id'),
+            }
+
+        all_refs = set(old_map.keys()) | set(new_map.keys())
+
+        for ref in all_refs:
+            old_qty = old_map.get(ref, 0)
+            new_qty = new_map.get(ref, {}).get('quantite', 0)
+            diff = new_qty - old_qty
+
+            piece_obj = PieceRef.query.filter_by(ref_piece=ref).with_for_update().first()
+
+            if not piece_obj and new_map.get(ref, {}).get('is_new'):
+                marque_id = new_map[ref].get('marque_id') or (
+                    rep.machine.modele.marque_id if rep.machine and rep.machine.modele else None
+                )
+                if not marque_id:
+                    raise ValueError(f"Impossible de créer la pièce {ref} sans marque associée.")
+
+                piece_obj = PieceRef(
+                    ref_piece=ref,
+                    designation=new_map[ref]['designation'],
+                    marque_id=marque_id,
+                    quantite=0
+                )
+                PieceRefRepository.add(piece_obj)
+                ReparationRepository.flush()
+
+            if not piece_obj:
+                raise ValueError(f"Pièce introuvable : {ref}")
+
+            if diff > 0:
+                if (piece_obj.quantite or 0) < diff:
+                    raise ValueError(f"Stock insuffisant pour {ref}. Disponible : {piece_obj.quantite or 0}, demandé : {diff}")
+                piece_obj.quantite = int(piece_obj.quantite or 0) - diff
+
+            elif diff < 0:
+                piece_obj.quantite = int(piece_obj.quantite or 0) + abs(diff)
+
         for p in list(rep.pieces):
             ReparationRepository.delete_piece_changee(p)
         ReparationRepository.flush()
 
-        pieces_connues = PieceRefRepository.get_all_as_dict()
+        for ref, item in new_map.items():
+            piece_obj = PieceRefRepository.get_by_ref(ref)
+            if not piece_obj:
+                raise ValueError(f"Pièce introuvable après mise à jour : {ref}")
 
-        for p in data['pieces']:
-            if not p.get('quantite', 0):
-                continue
-            ref_brute = p.get('ref_piece', '').strip().upper()
-            ref_corrigee, designation, _ = fuzzy_piece(ref_brute, pieces_connues, cutoff=0.80)
-
-            piece_obj = PieceRefRepository.get_by_ref(ref_corrigee)
-            if not piece_obj and p.get('is_new'):
-                piece_obj = PieceRef(
-                    ref_piece=ref_corrigee,
-                    designation=p.get('designation', designation),
-                    marque_id=p.get('marque_id')
+            ReparationRepository.add_piece_changee(
+                PieceChangee(
+                    reparation_id=rep.id,
+                    piece_ref_id=piece_obj.id,
+                    quantite=int(item['quantite'])
                 )
-                PieceRefRepository.add(piece_obj)
-                PieceRefRepository.flush()
-
-            if piece_obj:
-                ReparationRepository.add_piece_changee(
-                    PieceChangee(
-                        reparation_id=rep.id,
-                        piece_ref_id=piece_obj.id,
-                        quantite=int(p.get('quantite', 1))
-                    )
-                )
+            )
 
     ReparationRepository.commit()
     return rep
