@@ -1,3 +1,5 @@
+// Ce script ajoute la marque SAECO, le modèle ROYAL BLACK et les pièces associées à ce modèle.
+// A utiliser avec: "docker compose -f docker-compose.prod.yml exec -T db psql -U tech_admin -d liste_reparation < scripts_test/sql/saeco_royal_black.sql"
 BEGIN;
 
 -- 1) Créer la marque si elle n'existe pas
