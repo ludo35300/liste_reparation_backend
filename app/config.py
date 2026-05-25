@@ -38,7 +38,7 @@ class DevConfig:
     JWT_REFRESH_COOKIE_PATH     = "/api/auth/refresh"  # Cookie refresh uniquement sur la route de renouvellement
 
     # Durées de vie des tokens
-    JWT_ACCESS_TOKEN_EXPIRES    = 10 * 60        # 10 minutes
+    JWT_ACCESS_TOKEN_EXPIRES    = 1 * 24 * 3600  # 1 jour
     JWT_REFRESH_TOKEN_EXPIRES   = 7 * 24 * 3600  # 7 jours
 
     # ── CORS ─────────────────────────────────────────────────────────────────
