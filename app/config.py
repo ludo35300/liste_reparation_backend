@@ -75,10 +75,10 @@ class ProdConfig(DevConfig):
     # Exemple : CORS_ORIGINS=https://mon-app.fr,https://www.mon-app.fr
     CORS_ORIGINS                = [origin.strip() for origin in os.getenv("CORS_ORIGINS", "").split(",") if origin.strip()]
 
-    RATELIMIT_ENABLED           = True
-    RATELIMIT_STORAGE_URI       = os.getenv("RATELIMIT_STORAGE_URI", "redis://redis:6379/0")
-    RATELIMIT_HEADERS_ENABLED   = True
-    RATELIMIT_STRATEGY          = "fixed-window"
+   # RATELIMIT_ENABLED           = True
+   # RATELIMIT_STORAGE_URI       = os.getenv("RATELIMIT_STORAGE_URI", "redis://redis:6379/0")
+  #  RATELIMIT_HEADERS_ENABLED   = True
+  #  RATELIMIT_STRATEGY          = "fixed-window"
 
 
 class TestConfig(DevConfig):
