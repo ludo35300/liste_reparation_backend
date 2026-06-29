@@ -94,13 +94,6 @@ def creer_reparation(data: dict) -> Reparation:
                     quantite=qty
                 )
             )
-            ReparationRepository.add_piece_changee(
-                PieceChangee(
-                    reparation_id=rep.id,
-                    piece_ref_id=piece_obj.id,
-                    quantite=int(p.get('quantite', 1))
-                )
-            )
     ReparationRepository.commit() 
     # Mettre la machine en réparation
     machine.statut = 'en_reparation'
